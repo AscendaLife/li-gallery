@@ -10,9 +10,10 @@
 <style>
   html,body{margin:0;height:100%;background:#0b0a0a;color:#eee;font:14px/1.5 -apple-system,"PingFang TC",sans-serif}
   body{overflow:hidden}
+  [hidden]{display:none!important}
   #ui{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.8));pointer-events:none;z-index:5}
   #ui b{color:#E3B23C;font-weight:500} #hint{font-size:13px}
-  #log{font:11px/1.4 monospace;opacity:.6;max-height:90px;overflow:auto;margin-top:6px;white-space:pre-wrap}
+  #log{font:11px/1.4 monospace;opacity:.75;max-height:130px;overflow:auto;margin-top:6px;white-space:pre-wrap}
   #start{position:fixed;inset:0;overflow:auto;z-index:10;background:#0b0a0a;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
   #start.off{display:none}
   #start h1{font-size:20px;margin:0 0 4px} #start p{margin:0 0 12px;opacity:.75;font-size:13px}
@@ -83,7 +84,7 @@
       '<a-entity class="tgt" data-vid="v0" data-title="'+t[1]+'" mindar-image-target="targetIndex: 0"><a-video src="#v0" width="1" height="1.25"></a-video></a-entity></a-scene>';
     scene=document.querySelector('a-scene'); vids=[...document.querySelectorAll('a-assets video')];
     scene.addEventListener('arReady',()=>L('AR 就緒 ✓ 指紋已載入'));
-    scene.addEventListener('arError',e=>{ L('AR 錯誤 '+JSON.stringify(e.detail||'')); diag('<b>AR 啟動錯誤</b>'); });
+      scene.addEventListener('arError',e=>{ L('AR 錯誤 '+JSON.stringify(e.detail||'')); diag('<b>相機／AR 啟動錯誤</b>：請確認已允許相機權限，或改用 Chrome／Safari。'); });
     document.querySelectorAll('.tgt').forEach(tgt=>{ const v=document.getElementById(tgt.dataset.vid);
       tgt.addEventListener('targetFound',()=>{ v.play(); L('找到 '+tgt.dataset.title); hint.innerHTML='<b>'+tgt.dataset.title+'</b> — 畫在動'; });
       tgt.addEventListener('targetLost',()=>{ v.pause(); hint.textContent='畫離開畫面了，再對準一次'; }); });
@@ -98,16 +99,18 @@
   if(inApp) diag('<b>請改用 Safari / Chrome 開啟</b>：LINE、FB、IG 內建瀏覽器不給相機權限。');
   async function startAR(){
     const btn=document.getElementById('go'); btn.disabled=true; btn.textContent='開啟中…'; document.getElementById('bar').hidden=true;
-    let stream=null;
-    try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); }
-    catch(e){ document.getElementById('start').classList.add('off'); L('相機失敗 '+e.name); diag('<b>相機打不開：'+e.name+'</b> '+(e.message||'')+(e.name==='NotAllowedError'?'<br>到 設定 → Safari／Chrome → 相機 改成允許後重新整理。':'')); return; }
-    stream.getTracks().forEach(t=>t.stop());
-    L('相機權限 ✓，建立場景 '+sel); await buildScene(sel); L('場景就緒');
+    if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){ document.getElementById('start').classList.add('off'); diag('<b>此瀏覽器沒有相機 API</b>，請改用 Chrome／Safari。'); return; }
+    L('建立場景 '+sel); await buildScene(sel); L('場景就緒');
     for(const v of vids){ try{ const p=v.play(); await Promise.race([p,new Promise(r=>setTimeout(r,1500))]); v.pause(); }catch(e){} }   // iOS：在手勢裡解鎖影片，但最多等 1.5 秒
     document.getElementById('start').classList.add('off');
     hint.innerHTML='正在下載這幅畫的指紋並啟動相機（幾秒）…'; L('開始載入指紋');
     try{ await scene.systems['mindar-image-system'].start(); L('start() 完成'); hint.innerHTML='尋找畫作中… 對準整幅畫，距離 30–60 公分';
-      setTimeout(()=>{ const cv=[...document.querySelectorAll('video')].find(v=>!v.id); if(cv){ L('鏡頭畫面 '+cv.videoWidth+'x'+cv.videoHeight+' 顯示 '+Math.round(cv.getBoundingClientRect().width)+'x'+Math.round(cv.getBoundingClientRect().height)+' ready='+cv.readyState+(cv.paused?' 暫停':' 播放中')); if(cv.paused) cv.play().catch(e=>L('鏡頭 play 失敗 '+e.name)); } else L('找不到鏡頭 video 元素'); }, 2500); }
+      const fixCam=()=>{ const cv=[...document.querySelectorAll('video')].find(v=>!v.id); if(!cv){ L('找不到鏡頭 video 元素'); return; }
+        const r=cv.getBoundingClientRect();
+        L('鏡頭 '+cv.videoWidth+'x'+cv.videoHeight+' 顯示 '+Math.round(r.width)+'x'+Math.round(r.height)+' ready='+cv.readyState+(cv.paused?' 暫停':' 播放中'));
+        if(r.width<50||r.height<50){ Object.assign(cv.style,{position:'fixed',left:'0',top:'0',width:'100vw',height:'100vh',objectFit:'cover',zIndex:'0'}); L('已強制鏡頭鋪滿全螢幕'); }
+        if(cv.paused) cv.play().then(()=>L('鏡頭已播放')).catch(e=>L('鏡頭 play 失敗 '+e.name)); };
+      setTimeout(fixCam,2000); setTimeout(fixCam,5000); }
     catch(e){ L('start() 失敗 '+(e&&e.message||e)); diag('<b>AR 引擎啟動失敗：</b>'+(e&&e.message||e)); }
   }
   document.getElementById('go').addEventListener('click', startAR);
