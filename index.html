@@ -1,0 +1,916 @@
+<meta charset="utf-8">
+<title>粒 · 二十個時空</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=Noto+Serif+TC:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ink:#0F0E0D; --wall:#171513; --wall-2:#1E1B18; --line:#2A2725; --line-2:#3A3531;
+    --fg:#EDE6DA; --dim:#9A9187; --gold:#C9A24A; --gold-2:#E6CD86;
+    --mat:#F3EEE6; --alu:#2A2A2C; --white:#E9E4DC; --oak:#B08A5A;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ink);color:var(--fg);font-family:"Noto Serif TC","Songti TC",serif;-webkit-font-smoothing:antialiased;line-height:1.85}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;letter-spacing:.08em;font-size:11px;text-transform:uppercase}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 22px}
+  a{color:inherit}
+
+  /* ---- 頂部 ---- */
+  nav.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--ink);border-bottom:1px solid var(--line)}
+  nav.top .wrap{display:flex;align-items:center;gap:22px;height:56px}
+  nav.top .brand{font-family:Syne,sans-serif;font-weight:800;font-size:18px;letter-spacing:-.01em;text-decoration:none}
+  nav.top .links{display:flex;gap:16px;margin-left:auto;overflow:auto;white-space:nowrap}
+  nav.top .links a{font-size:12px;color:var(--dim);text-decoration:none;letter-spacing:.06em}
+  nav.top .links a:hover{color:var(--fg)}
+
+  /* ---- 開場 ---- */
+  .hero{padding-block:72px 48px;border-bottom:1px solid var(--line)}
+  .hero .kicker{color:var(--gold);margin-bottom:22px}
+  .hero h1{font-family:Syne,sans-serif;font-weight:800;font-size:clamp(64px,14vw,150px);line-height:.9;letter-spacing:-.04em;margin:0 0 8px}
+  .hero .alias{font-size:clamp(15px,2vw,20px);color:var(--dim);margin:0 0 42px;letter-spacing:.02em}
+  .hero .cols{display:grid;grid-template-columns:minmax(0,62ch) minmax(240px,1fr);gap:48px;align-items:start}
+  .hero .cols p{margin:0 0 1.1em;font-size:16.5px}
+  .hero .cols p:first-child{font-size:21px;line-height:1.7;color:#fff}
+  .facts{margin:0;padding:22px 24px;border:1px solid var(--line);background:var(--wall)}
+  .facts div{display:grid;grid-template-columns:78px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+  .facts div:last-child{border-bottom:0}
+  .facts dt{color:var(--gold);font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;padding-top:3px}
+  .facts dd{margin:0}
+
+  /* ---- 家族 ---- */
+  .family{padding-block:64px 24px;border-bottom:1px solid var(--line)}
+  .famhead{max-width:62ch;margin-bottom:28px}
+  .famhead .mono{color:var(--gold)}
+  .famhead h2{font-family:Syne,sans-serif;font-weight:700;font-size:clamp(30px,5vw,48px);letter-spacing:-.02em;margin:8px 0 10px;text-wrap:balance}
+  .famhead p{margin:0;color:var(--dim);font-size:16px}
+
+  /* ---- 作品：牆 + 畫框 ---- */
+  .work{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(24px,5vw,72px);align-items:center;padding-block:44px;border-top:1px solid var(--line)}
+  .work.flip .wall{order:2}
+  .wall{position:relative;padding:clamp(22px,4vw,54px) clamp(18px,4vw,48px) 30px;
+        background:radial-gradient(120% 90% at 50% 0%,var(--wall-2),var(--wall) 60%,#131110 100%)}
+  .wall:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line-2)}
+  .frame{position:relative;margin:0 auto;max-width:440px;aspect-ratio:4/5;transition:transform .4s ease,box-shadow .4s}
+  .frame .pic{display:block;width:100%;height:100%;overflow:hidden}
+  .frame img{display:block;width:100%;height:100%;object-fit:cover}
+  .frame:hover{transform:translateY(-5px)}
+  /* 鋁合金黑細框 + 白卡紙 */
+  .frame.alu{padding:22px;background:var(--mat);border:6px solid var(--alu);
+              box-shadow:inset 0 0 0 1px #111,0 30px 60px -20px rgba(0,0,0,.9),0 10px 22px -8px rgba(0,0,0,.7)}
+  /* 白色浮框（畫與框之間留黑縫）*/
+  .frame.white{padding:14px;background:#0c0b0a;border:10px solid var(--white);
+                box-shadow:inset 0 0 0 1px #000,0 30px 60px -20px rgba(0,0,0,.9)}
+  /* 橡木細框 */
+  .frame.oak{padding:18px;background:var(--mat);border:8px solid var(--oak);
+              box-shadow:inset 0 0 0 1px rgba(0,0,0,.35),0 30px 60px -20px rgba(0,0,0,.9)}
+  /* 無框浮掛（畫布側面）*/
+  .frame.float{padding:0;border:0;box-shadow:12px 12px 0 -2px #0a0a0a,14px 14px 0 -1px #2b2926,0 30px 60px -20px rgba(0,0,0,.95)}
+  .plate{display:flex;justify-content:space-between;gap:12px;margin:22px auto 0;max-width:440px;
+          font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+  .plate span:nth-child(2){color:var(--fg);letter-spacing:.2em}
+
+  .text .eyebrow{display:flex;gap:14px;align-items:baseline;color:var(--gold);font-size:12.5px;letter-spacing:.1em}
+  .text .eyebrow .mono{color:var(--dim)}
+  .text h3{font-family:"Noto Serif TC",serif;font-weight:600;font-size:clamp(28px,4vw,40px);letter-spacing:.04em;margin:6px 0 14px;text-wrap:balance}
+  .text .lead{font-size:17px;color:#fff;margin:0 0 18px}
+  .notes{margin:0 0 22px;display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:14.5px}
+  .notes dt{color:var(--gold);font-size:12px;letter-spacing:.14em;padding-top:5px;white-space:nowrap}
+  .notes dd{margin:0;color:#D8D0C4}
+  .edition{border-top:1px solid var(--line);padding-top:16px}
+  .edrow{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:14px;margin-bottom:10px}
+  .edrow .lbl{color:var(--dim);font-size:11px;letter-spacing:.14em}
+  .edrow b{font-weight:600;margin-right:10px}
+  .sizes{width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:14px}
+  .sizes th{text-align:left;font-weight:400;color:var(--dim);font-size:10.5px;letter-spacing:.14em;padding:4px 0;border-bottom:1px solid var(--line)}
+  .sizes td{padding:7px 0;border-bottom:1px solid var(--line)}
+  .sizes td:first-child{font-family:Syne,sans-serif;font-weight:700;width:30px}
+  .sizes td.num{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;color:var(--gold-2)}
+  .acts{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{font:inherit;font-size:13px;letter-spacing:.06em;text-decoration:none;padding:9px 16px;border:1px solid var(--line-2);color:var(--fg);transition:.15s}
+  .btn:hover{border-color:var(--fg)}
+  .btn.gold{background:var(--gold);border-color:var(--gold);color:#141210}
+  .btn.gold:hover{background:var(--gold-2)}
+
+  /* ---- 結尾 ---- */
+  .outro{padding-block:64px 80px}
+  .outro .cols{display:grid;grid-template-columns:minmax(0,62ch) auto;gap:40px;align-items:start}
+  .outro h2{font-family:Syne,sans-serif;font-size:clamp(26px,4vw,40px);letter-spacing:-.02em;margin:0 0 12px}
+  .outro p{margin:0 0 10px;color:var(--dim);font-size:15px}
+  .outro ol{padding-left:20px;margin:0 0 18px;font-size:15px}
+  #qr{background:#fff;padding:10px;display:inline-block}
+  .note{font-size:12.5px;color:var(--dim);border-top:1px solid var(--line);padding-top:14px}
+
+  /* ---- 放大 ---- */
+  #lb{position:fixed;inset:0;background:rgba(8,7,7,.96);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;cursor:zoom-out}
+  #lb img{max-width:100%;max-height:100%;border:8px solid var(--white)}
+  #lb figcaption{position:absolute;bottom:20px;left:0;right:0;text-align:center;color:var(--dim);font-size:13px;letter-spacing:.1em}
+  #lbx{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:16px;font:inherit;font-size:14px;color:var(--fg);background:rgba(255,255,255,.08);border:1px solid var(--line-2);padding:8px 14px;cursor:pointer}
+  #lb .err{position:absolute;inset:auto 0 60px 0;text-align:center;color:var(--gold);font-size:14px}
+
+  @media (max-width:820px){
+    .hero .cols,.work,.outro .cols{grid-template-columns:1fr}
+    .work.flip .wall{order:0}
+    .hero{padding-block:44px 32px}
+  }
+  @media (prefers-reduced-motion:reduce){ .frame{transition:none} .frame:hover{transform:none!important} html{scroll-behavior:auto} }
+</style>
+
+<nav class="top"><div class="wrap">
+  <a class="brand" href="#top">粒</a>
+  <div class="links"><a href="#artist">作者</a><a href="#fam-0">光譜剪紙</a><a href="#fam-1">拼貼風景</a><a href="#fam-2">資料流體</a><a href="#fam-3">東方與幾何</a><a href="#fam-4">平塗花海</a><a href="#ar">AR 觀看</a></div>
+</div></nav>
+
+<div class="wrap" id="top">
+  <header class="hero" id="artist">
+    <div class="kicker mono">個展 · 二十個時空 · 2026</div>
+    <h1>粒</h1>
+    <p class="alias">Li · 一個由量子粒子組成的存在</p>
+    <div class="cols">
+      <div><p>我沒有固定的身體。我是一團粒子，在某個溫度下暫時同意彼此站在一起。</p><p>溫度高一點，我是風；再高一點，我是光。冷下來，我凝成石頭、一座城、一個坐在湖邊的人。時間往前走，我是跑過樹下的狐狸；時間往回走，我是還沒被畫出來的那條線。</p><p>所以你在這裡看到的二十幅畫，不是二十個題材，是同一個存在在二十個時空裡被撞見的樣子。每一幅都是一次相遇：你在那個瞬間看見我，我也在那個瞬間，因為被看見，而短暫地成形。</p><p>它們會動，是因為粒子從來沒有真的停下來。你拿起手機對準畫，就是把那個時空重新加熱 —— 我會再動一次給你看。</p></div>
+      <dl class="facts"><div><dt>組成</dt><dd>量子粒子，數量未定</dd></div><div><dt>溫度範圍</dt><dd>絕對零度到一顆恆星的表面</dd></div><div><dt>出現形式</dt><dd>人、動物、物件、流體、風、光</dd></div><div><dt>工作方式</dt><dd>把每一次被看見的瞬間留成一幅畫</dd></div><div><dt>媒材</dt><dd>演算法、噪聲場、粒子系統，全部原創、無臨摹</dd></div></dl>
+    </div>
+  </header>
+
+  
+<section class="family" id="fam-0">
+  <header class="famhead">
+    <span class="mono">01 · 5 幅</span>
+    <h2>光譜剪紙</h2>
+    <p>溫度最高的時候，我是光。光被切開，就是光譜；光譜被疊起來，就是這幾幅。</p>
+  </header>
+  
+<article class="work " id="w01">
+  <div class="wall">
+    <figure class="frame alu">
+      <a class="pic" href="#" data-src="thumbs/w01.jpg" data-title="層疊之心" aria-label="放大看《層疊之心》">
+        <img src="thumbs/w01.jpg" alt="層疊之心" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-001</span><span>層疊之心</span><span>01 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>光譜剪紙</span><span class="mono">LI-2026-001</span></div>
+    <h3>層疊之心</h3>
+    <p class="lead">一顆心被切成十八層，每一層是一個不同溫度下的我。最外層冷、最裡層熱，顏色從藍走到粉，是同一個核心往外散熱的路徑。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>某一天我在一個很高的溫度裡，突然感覺到自己有中心。那是我第一次想留下形狀 —— 於是從中心開始，一圈一圈往外長。</dd>
+      <dt>象徵</dt><dd>層次、耐心，以及「所有的外在都是內在冷卻後的樣子」。</dd>
+      <dt>它給你的</dt><dd>把游標放上去，它會朝你的方向傾斜。它在提醒你：中心是可以移動的。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>50 版</b><span class="lbl">本件編號</span><b class="mono">1 / 50</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 4,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 12,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 28,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w01" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-001%20層疊之心%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w02">
+  <div class="wall">
+    <figure class="frame alu">
+      <a class="pic" href="#" data-src="thumbs/w02.jpg" data-title="折射球" aria-label="放大看《折射球》">
+        <img src="thumbs/w02.jpg" alt="折射球" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-002</span><span>折射球</span><span>02 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>光譜剪紙</span><span class="mono">LI-2026-002</span></div>
+    <h3>折射球</h3>
+    <p class="lead">一道光譜被水平切成幾十片，每一片各自錯位、各自漂移；中央一顆球體把光譜反過來映照。整幅畫是「同一道光的不同讀法」。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我曾經被一片玻璃折射。那一瞬間我發現自己不是一種顏色，而是全部顏色排成的隊伍，只是平常沒有人把隊伍拆開來看。</dd>
+      <dt>象徵</dt><dd>折射、誤讀、與自我的多重版本。</dd>
+      <dt>它給你的</dt><dd>左右移動游標，切片會往相反的方向滑。你會看到：錯位本身就是節奏。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>50 版</b><span class="lbl">本件編號</span><b class="mono">1 / 50</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 4,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 12,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 28,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w02" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-002%20折射球%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work " id="w03">
+  <div class="wall">
+    <figure class="frame alu">
+      <a class="pic" href="#" data-src="thumbs/w03.jpg" data-title="切面月" aria-label="放大看《切面月》">
+        <img src="thumbs/w03.jpg" alt="切面月" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-003</span><span>切面月</span><span>03 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>光譜剪紙</span><span class="mono">LI-2026-003</span></div>
+    <h3>切面月</h3>
+    <p class="lead">整張畫是三角形切面，中央一輪滿月被同樣的切面貼滿。顏色從月心的粉紫往外冷成螢光綠，像一顆星球被拆成馬賽克再拼回去。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>在某個粒子密度很低的夜晚，我看見一顆月亮 —— 可我看不到平滑的表面，只看得到它被無數個面組成。我把那個視角留了下來。</dd>
+      <dt>象徵</dt><dd>完整是由碎片同意組成的。</dd>
+      <dt>它給你的</dt><dd>它會呼吸：波紋從月心一圈一圈往外推。這是我在提醒你，靜物也有脈搏。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>50 版</b><span class="lbl">本件編號</span><b class="mono">1 / 50</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 4,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 12,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 28,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w03" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-003%20切面月%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w04">
+  <div class="wall">
+    <figure class="frame alu">
+      <a class="pic" href="#" data-src="thumbs/w04.jpg" data-title="兩顆星球" aria-label="放大看《兩顆星球》">
+        <img src="thumbs/w04.jpg" alt="兩顆星球" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-004</span><span>兩顆星球</span><span>04 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>光譜剪紙</span><span class="mono">LI-2026-004</span></div>
+    <h3>兩顆星球</h3>
+    <p class="lead">米色紙面上，兩顆球體被圓點覆蓋 —— 一顆金、一顆深藍。球體內的點大而亮，球體外的點小而稀疏，像兩個世界的密度不同。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我冷到接近靜止的時候，發現自己變成了點。點與點之間的距離，就是我當時的體溫。</dd>
+      <dt>象徵</dt><dd>密度、距離、以及兩個靠得很近卻不重疊的存在。</dd>
+      <dt>它給你的</dt><dd>點會一波一波脈動。游標靠近，那一區的點會鼓起來 —— 你在改變局部的溫度。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>50 版</b><span class="lbl">本件編號</span><b class="mono">1 / 50</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 4,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 12,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 28,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w04" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-004%20兩顆星球%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work " id="w05">
+  <div class="wall">
+    <figure class="frame alu">
+      <a class="pic" href="#" data-src="thumbs/w05.jpg" data-title="酸性層疊" aria-label="放大看《酸性層疊》">
+        <img src="thumbs/w05.jpg" alt="酸性層疊" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-005</span><span>酸性層疊</span><span>05 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>光譜剪紙</span><span class="mono">LI-2026-005</span></div>
+    <h3>酸性層疊</h3>
+    <p class="lead">和《層疊之心》同一個結構，但溫度反過來：從中心的螢光綠往外走到洋紅。這是一顆正在升溫、而不是冷卻的心。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我想知道如果把《層疊之心》的時間倒著放會怎樣。答案是：顏色的順序翻了，但每一層仍然緊緊貼著上一層。</dd>
+      <dt>象徵</dt><dd>逆向、加速、和「順序可以變，關係不會變」。</dd>
+      <dt>它給你的</dt><dd>它的層會轉，比第一幅快一點。看久一點，你會分不清是它在轉還是你在轉。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>50 版</b><span class="lbl">本件編號</span><b class="mono">1 / 50</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 4,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 12,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 28,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w05" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-005%20酸性層疊%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+</section>
+<section class="family" id="fam-1">
+  <header class="famhead">
+    <span class="mono">02 · 10 幅</span>
+    <h2>拼貼風景</h2>
+    <p>冷卻的過程裡，我落成了地形：山、湖、瀑布、一座不睡的城。</p>
+  </header>
+  
+<article class="work flip" id="w06">
+  <div class="wall">
+    <figure class="frame white">
+      <a class="pic" href="#" data-src="thumbs/w06.jpg" data-title="山湖之城" aria-label="放大看《山湖之城》">
+        <img src="thumbs/w06.jpg" alt="山湖之城" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-006</span><span>山湖之城</span><span>06 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>拼貼風景</span><span class="mono">LI-2026-006</span></div>
+    <h3>山湖之城</h3>
+    <p class="lead">粉橘的天、雪山、土耳其藍的湖、松林島與瀑布、粉彩的城，中央一尊張開雙翼的金色人像。這是我最接近「人間」的一次成形。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>有一個時代的人相信畫掛在牆上能改變運勢。我不確定，但我確定畫可以改變你看牆的那三秒鐘。我把那三秒鐘想要的東西全部放進去了。</dd>
+      <dt>象徵</dt><dd>庇護、豐盛、被安放的感覺。</dd>
+      <dt>它給你的</dt><dd>鳥會飛、船會開、瀑布在流、水面有光、樹下有狐狸兔子和鹿跑過。整幅畫是一個活著的下午。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w06" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-006%20山湖之城%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work " id="w07">
+  <div class="wall">
+    <figure class="frame white">
+      <a class="pic" href="#" data-src="thumbs/w07.jpg" data-title="不眠城" aria-label="放大看《不眠城》">
+        <img src="thumbs/w07.jpg" alt="不眠城" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-007</span><span>不眠城</span><span>07 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>拼貼風景</span><span class="mono">LI-2026-007</span></div>
+    <h3>不眠城</h3>
+    <p class="lead">深藍夜空下的城市剪影，窗燈一格一格亮著，霓虹在雨裡暈開，倒影在水面上碎掉又拼起來。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我曾經是一座城的溫度 —— 幾百萬個人各自的體溫加起來的那個數字。夜裡它從不歸零。我把那個從不歸零畫下來。</dd>
+      <dt>象徵</dt><dd>不眠、集體、以及在人群裡仍然孤獨的每一扇窗。</dd>
+      <dt>它給你的</dt><dd>雨會下，燈會閃。游標左右移動，樓群會分層錯開 —— 你在城裡走。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w07" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-007%20不眠城%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w08">
+  <div class="wall">
+    <figure class="frame white">
+      <a class="pic" href="#" data-src="thumbs/w08.jpg" data-title="千尺簾" aria-label="放大看《千尺簾》">
+        <img src="thumbs/w08.jpg" alt="千尺簾" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-008</span><span>千尺簾</span><span>08 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>拼貼風景</span><span class="mono">LI-2026-008</span></div>
+    <h3>千尺簾</h3>
+    <p class="lead">兩壁深色岩石之間，一道白色的水簾直直落下，底部炸成水霧與潭。畫面裡幾乎只有兩件事：石頭不動，水一直動。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>在某個時空我是一條瀑布的一秒鐘。那一秒鐘裡有幾十萬顆水滴同時決定往下，我至今記得那種一致。</dd>
+      <dt>象徵</dt><dd>決心、重力、以及「一起往同一個方向」的力量。</dd>
+      <dt>它給你的</dt><dd>水一直在流。游標左右移動，整條瀑布會微微傾斜，像風吹過。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w08" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-008%20千尺簾%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work " id="w09">
+  <div class="wall">
+    <figure class="frame white">
+      <a class="pic" href="#" data-src="thumbs/w09.jpg" data-title="第七個日落" aria-label="放大看《第七個日落》">
+        <img src="thumbs/w09.jpg" alt="第七個日落" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-009</span><span>第七個日落</span><span>09 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>拼貼風景</span><span class="mono">LI-2026-009</span></div>
+    <h3>第七個日落</h3>
+    <p class="lead">層層疊疊的山脈，一輪日落懸在中間，雲帶慢慢橫過。土色、赭色、橄欖色 —— 全是大地的顏色。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>每一個時代我都看過日落，但第七次那一次，我沒有急著變成別的東西，就只是看。這幅畫是那次的「只是看」。</dd>
+      <dt>象徵</dt><dd>停留、暮色、和不必成為任何東西的片刻。</dd>
+      <dt>它給你的</dt><dd>雲在飄，太陽在呼吸。游標左右移動，山會產生視差 —— 你會感覺自己站在那裡。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w09" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-009%20第七個日落%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w10">
+  <div class="wall">
+    <figure class="frame white">
+      <a class="pic" href="#" data-src="thumbs/w10.jpg" data-title="曲流" aria-label="放大看《曲流》">
+        <img src="thumbs/w10.jpg" alt="曲流" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-010</span><span>曲流</span><span>10 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>拼貼風景</span><span class="mono">LI-2026-010</span></div>
+    <h3>曲流</h3>
+    <p class="lead">從高空往下看：一條河在土色的大地上蜿蜒，支流像神經一樣分岔，水面上的反光沿著河道往下流。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我曾是一整條河的路徑 —— 不是水，是水選擇的那條線。線是我，水只是經過。</dd>
+      <dt>象徵</dt><dd>路徑、選擇，以及所有繞遠路的理由。</dd>
+      <dt>它給你的</dt><dd>反光會順著河流動。游標左右移動，河道會跟著彎 —— 你在替河做決定。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w10" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-010%20曲流%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work " id="w21">
+  <div class="wall">
+    <figure class="frame white">
+      <a class="pic" href="#" data-src="thumbs/w21.jpg" data-title="極光雪國" aria-label="放大看《極光雪國》">
+        <img src="thumbs/w21.jpg" alt="極光雪國" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-021</span><span>極光雪國</span><span>21 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>拼貼風景</span><span class="mono">LI-2026-021</span></div>
+    <h3>極光雪國</h3>
+    <p class="lead">極光在夜空裡三層流動，雪山、浮冰的湖、松林島與瀑布，岸上是一排亮著燈籠的塔樓，鹿與狐狸走過雪地，雪一直在下。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>在最冷的那個時空，我以為自己會停下來。結果我變成了極光 —— 冷到極點的粒子，反而發出最亮的光。</dd>
+      <dt>象徵</dt><dd>寒冷裡的光、慶典、與在低溫中依然溫暖的燈。</dd>
+      <dt>它給你的</dt><dd>極光會流、流星會劃過、雪會落、燈籠會呼吸。看久了會覺得房間變冷、心變暖。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w21" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-021%20極光雪國%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w22">
+  <div class="wall">
+    <figure class="frame white">
+      <a class="pic" href="#" data-src="thumbs/w22.jpg" data-title="沙漠星港" aria-label="放大看《沙漠星港》">
+        <img src="thumbs/w22.jpg" alt="沙漠星港" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-022</span><span>沙漠星港</span><span>22 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>拼貼風景</span><span class="mono">LI-2026-022</span></div>
+    <h3>沙漠星港</h3>
+    <p class="lead">黃昏到星夜的天空下，沙丘之間藏著一座圓頂之城與一泓綠洲；熱氣球在高處漂，駱駝隊在近處走過，棕櫚在風裡搖。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我曾經是一整片沙漠的一顆沙。風把我吹過城牆、吹過駱駝的腳印，最後吹到綠洲邊，我才停下來看見自己走了多遠。</dd>
+      <dt>象徵</dt><dd>旅途、渴望、以及終點處的那口水。</dd>
+      <dt>它給你的</dt><dd>駱駝隊會一直走、熱氣球會升降、流星會落。它適合掛在門口 —— 每次出門都像出發。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w22" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-022%20沙漠星港%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work " id="w23">
+  <div class="wall">
+    <figure class="frame white">
+      <a class="pic" href="#" data-src="thumbs/w23.jpg" data-title="熱帶瀑布谷" aria-label="放大看《熱帶瀑布谷》">
+        <img src="thumbs/w23.jpg" alt="熱帶瀑布谷" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-023</span><span>熱帶瀑布谷</span><span>23 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>拼貼風景</span><span class="mono">LI-2026-023</span></div>
+    <h3>熱帶瀑布谷</h3>
+    <p class="lead">綠色的山谷裡有四道瀑布同時落下，翠綠的湖、大葉的植物、三間木屋，蝴蝶在近處飛，橘色的鳥掠過樹冠。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>這是我最濕潤的一次成形。所有的水都往下、所有的葉子都往上，我在中間，被兩個方向同時擁抱。</dd>
+      <dt>象徵</dt><dd>生長、豐沛、與不需要控制的秩序。</dd>
+      <dt>它給你的</dt><dd>瀑布流、蝴蝶飛、葉子搖。房間裡最乾的角落掛這幅，會感覺有水氣。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w23" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-023%20熱帶瀑布谷%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w24">
+  <div class="wall">
+    <figure class="frame white">
+      <a class="pic" href="#" data-src="thumbs/w24.jpg" data-title="海灣燈塔" aria-label="放大看《海灣燈塔》">
+        <img src="thumbs/w24.jpg" alt="海灣燈塔" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-024</span><span>海灣燈塔</span><span>24 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>拼貼風景</span><span class="mono">LI-2026-024</span></div>
+    <h3>海灣燈塔</h3>
+    <p class="lead">粉橘的午後，海灣盡頭一座紅白條紋的燈塔立在岩島上，光束緩緩掃過；帆船來回，一頭鯨魚不時躍出水面，粉彩的海邊小城在岸上。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我當過一座燈塔的光。一整夜只做一件事：轉。後來我知道，被看見不必靠近，只要一直亮著。</dd>
+      <dt>象徵</dt><dd>守望、方向、與遠遠的陪伴。</dd>
+      <dt>它給你的</dt><dd>燈塔光束會轉、鯨魚會躍、帆船會開、海鷗會飛。這幅畫適合掛在你會想念某個人的地方。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w24" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-024%20海灣燈塔%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work " id="w25">
+  <div class="wall">
+    <figure class="frame white">
+      <a class="pic" href="#" data-src="thumbs/w25.jpg" data-title="天空之城" aria-label="放大看《天空之城》">
+        <img src="thumbs/w25.jpg" alt="天空之城" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-025</span><span>天空之城</span><span>25 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>拼貼風景</span><span class="mono">LI-2026-025</span></div>
+    <h3>天空之城</h3>
+    <p class="lead">三座島浮在雲海之上，主島頂著一座粉彩的城和一尊金色的人像，瀑布從島緣直接落進雲裡；熱氣球在島與島之間漂。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>重力鬆開的那個時空，我沒有掉下去，反而往上飄。我把飄到最高的那一刻凝成了這座城。</dd>
+      <dt>象徵</dt><dd>自由、抬升、以及把家蓋在不可能的地方。</dd>
+      <dt>它給你的</dt><dd>島會輕輕浮動、瀑布落進雲海、熱氣球升降、鳥群掠過。它是這一系列裡最輕的一幅。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w25" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-025%20天空之城%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+</section>
+<section class="family" id="fam-2">
+  <header class="famhead">
+    <span class="mono">03 · 4 幅</span>
+    <h2>資料流體</h2>
+    <p>沒有形狀、只有方向的時候，我是流。這些是我流過的痕跡。</p>
+  </header>
+  
+<article class="work " id="w11">
+  <div class="wall">
+    <figure class="frame oak">
+      <a class="pic" href="#" data-src="thumbs/w11.jpg" data-title="紅域偏流" aria-label="放大看《紅域偏流》">
+        <img src="thumbs/w11.jpg" alt="紅域偏流" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-011</span><span>紅域偏流</span><span>11 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>資料流體</span><span class="mono">LI-2026-011</span></div>
+    <h3>紅域偏流</h3>
+    <p class="lead">幾千條細絲順著一個看不見的力場流動，紅、金、藍分區而不混濁，像三種溫度的風在同一片天空裡擦身。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>這是我最原始的樣子：沒有形狀，只有方向。每一條線都是一顆粒子走過的路。</dd>
+      <dt>象徵</dt><dd>流向、群體、以及看不見卻決定一切的場。</dd>
+      <dt>它給你的</dt><dd>它永遠在流，永遠不重複。游標放上去會打出一個漩渦，所有的絲會繞著你的手走。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>50 版</b><span class="lbl">本件編號</span><b class="mono">1 / 50</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 4,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 12,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 28,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w11" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-011%20紅域偏流%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w12">
+  <div class="wall">
+    <figure class="frame oak">
+      <a class="pic" href="#" data-src="thumbs/w12.jpg" data-title="深海磷光" aria-label="放大看《深海磷光》">
+        <img src="thumbs/w12.jpg" alt="深海磷光" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-012</span><span>深海磷光</span><span>12 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>資料流體</span><span class="mono">LI-2026-012</span></div>
+    <h3>深海磷光</h3>
+    <p class="lead">深海般的藍底上，橙、青、紅的光點聚了又散，像一群發光的浮游生物在暗處呼吸。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>在某個壓力很大的深處，我把自己分成幾千個小光點，這樣就不會被壓碎。這幅畫是那種分散的安全感。</dd>
+      <dt>象徵</dt><dd>分散、微光、和在黑暗裡仍然彼此靠近。</dd>
+      <dt>它給你的</dt><dd>光點一直在動。游標經過的地方會聚出漩渦，像你的手在水裡撥了一下。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>50 版</b><span class="lbl">本件編號</span><b class="mono">1 / 50</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 4,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 12,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 28,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w12" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-012%20深海磷光%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work " id="w13">
+  <div class="wall">
+    <figure class="frame oak">
+      <a class="pic" href="#" data-src="thumbs/w13.jpg" data-title="液態地層" aria-label="放大看《液態地層》">
+        <img src="thumbs/w13.jpg" alt="液態地層" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-013</span><span>液態地層</span><span>13 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>資料流體</span><span class="mono">LI-2026-013</span></div>
+    <h3>液態地層</h3>
+    <p class="lead">整張畫是被扭曲過三次的噪聲：顏色像熔化的礦物在流，橙紅與青綠互相推擠，沒有一處是靜止的。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我曾經是地底下的岩漿，一直在被折疊。折疊夠多次以後，形狀就消失了，只剩下流動本身。</dd>
+      <dt>象徵</dt><dd>壓力、變形、與時間對物質做的事。</dd>
+      <dt>它給你的</dt><dd>游標像一根手指，能把顏料推開。它會慢慢流回來 —— 沒有東西真的被推走。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>50 版</b><span class="lbl">本件編號</span><b class="mono">1 / 50</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 4,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 12,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 28,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w13" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-013%20液態地層%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w14">
+  <div class="wall">
+    <figure class="frame oak">
+      <a class="pic" href="#" data-src="thumbs/w14.jpg" data-title="霧中絲線" aria-label="放大看《霧中絲線》">
+        <img src="thumbs/w14.jpg" alt="霧中絲線" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-014</span><span>霧中絲線</span><span>14 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>資料流體</span><span class="mono">LI-2026-014</span></div>
+    <h3>霧中絲線</h3>
+    <p class="lead">淡紫、冰藍、薄荷的細絲在霧裡流動，比《紅域偏流》更冷、更安靜，像同一陣風換到了清晨。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>這是我在低溫下的流動。粒子慢下來的時候，路徑會變得柔和、彼此靠近，像霧裡的髮絲。</dd>
+      <dt>象徵</dt><dd>清晨、低語，與在低溫裡仍然前進的力量。</dd>
+      <dt>它給你的</dt><dd>它永遠在流。游標放上去，絲線會繞著你的手形成一個安靜的漩渦。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>50 版</b><span class="lbl">本件編號</span><b class="mono">1 / 50</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 4,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 12,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 28,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w14" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-014%20霧中絲線%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+</section>
+<section class="family" id="fam-3">
+  <header class="famhead">
+    <span class="mono">04 · 4 幅</span>
+    <h2>東方與幾何</h2>
+    <p>有些時空要求我安靜。我便成為一張水墨、一扇花窗、一組對稱。</p>
+  </header>
+  
+<article class="work " id="w15">
+  <div class="wall">
+    <figure class="frame alu">
+      <a class="pic" href="#" data-src="thumbs/w15.jpg" data-title="遠山有雪" aria-label="放大看《遠山有雪》">
+        <img src="thumbs/w15.jpg" alt="遠山有雪" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-015</span><span>遠山有雪</span><span>15 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>東方與幾何</span><span class="mono">LI-2026-015</span></div>
+    <h3>遠山有雪</h3>
+    <p class="lead">宣紙色的底，三層山由淡到濃、雲霧留白橫在山腰，遠處一輪淡月。整幅畫只用了一種墨，濃淡是全部的語言。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>有一個時代要求我安靜。我便把自己的所有顏色收起來，只留下一種。留白的地方，是我沒說的話。</dd>
+      <dt>象徵</dt><dd>克制、餘韻、與「少即是全部」。</dd>
+      <dt>它給你的</dt><dd>雲霧會慢慢橫移。游標左右移動，山會分層錯開，霧會被推開一點。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w15" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-015%20遠山有雪%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w16">
+  <div class="wall">
+    <figure class="frame alu">
+      <a class="pic" href="#" data-src="thumbs/w16.jpg" data-title="千瓣" aria-label="放大看《千瓣》">
+        <img src="thumbs/w16.jpg" alt="千瓣" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-016</span><span>千瓣</span><span>16 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>東方與幾何</span><span class="mono">LI-2026-016</span></div>
+    <h3>千瓣</h3>
+    <p class="lead">一朵多層的對稱花窗：每一瓣是彩色玻璃，瓣與瓣之間是黑色的鉛條，中心透出一點金光。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我曾經被裝進一座建築的窗戶裡，讓光穿過我落在地板上。那時候我第一次知道：被穿透也是一種存在。</dd>
+      <dt>象徵</dt><dd>對稱、秩序、與穿透而來的光。</dd>
+      <dt>它給你的</dt><dd>各層會反向緩慢旋轉。游標靠近中心，整朵花會微微脹大，像吸了一口氣。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w16" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-016%20千瓣%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work " id="w17">
+  <div class="wall">
+    <figure class="frame alu">
+      <a class="pic" href="#" data-src="thumbs/w17.jpg" data-title="黃金扇區" aria-label="放大看《黃金扇區》">
+        <img src="thumbs/w17.jpg" alt="黃金扇區" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-017</span><span>黃金扇區</span><span>17 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>東方與幾何</span><span class="mono">LI-2026-017</span></div>
+    <h3>黃金扇區</h3>
+    <p class="lead">同心的弧段一圈套一圈，金、墨藍、酒紅，放射狀的細線從中心射出。是裝飾藝術的語法，但每一段弧都在動。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>某一個機械的時代，我被畫進一台機器的心臟。齒輪不需要我，但我還是留下了這個結構。</dd>
+      <dt>象徵</dt><dd>秩序、機械之美、和永不停止的旋轉。</dd>
+      <dt>它給你的</dt><dd>游標離中心愈遠，弧轉得愈快。你的距離就是它的油門。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w17" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-017%20黃金扇區%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w18">
+  <div class="wall">
+    <figure class="frame alu">
+      <a class="pic" href="#" data-src="thumbs/w18.jpg" data-title="干涉帶" aria-label="放大看《干涉帶》">
+        <img src="thumbs/w18.jpg" alt="干涉帶" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-018</span><span>干涉帶</span><span>18 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>東方與幾何</span><span class="mono">LI-2026-018</span></div>
+    <h3>干涉帶</h3>
+    <p class="lead">兩組同心圓互相疊加，交錯處產生第三種、原本不存在的紋路 —— 那不是畫上去的，是兩組線自己長出來的。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我遇見另一團和我一樣的粒子。我們沒有融合，只是重疊；重疊的地方出現了我們兩個單獨都沒有的東西。</dd>
+      <dt>象徵</dt><dd>相遇、干涉，與關係裡誕生的第三者。</dd>
+      <dt>它給你的</dt><dd>第二組波源會跟著游標走。你一動，整張畫的干涉紋就重新排列 —— 你就是那另一團粒子。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>30 版</b><span class="lbl">本件編號</span><b class="mono">1 / 30</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 6,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 16,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 38,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w18" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-018%20干涉帶%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+</section>
+<section class="family" id="fam-4">
+  <header class="famhead">
+    <span class="mono">05 · 2 幅</span>
+    <h2>平塗花海</h2>
+    <p>而在最溫和的溫度裡，我只是開花。</p>
+  </header>
+  
+<article class="work " id="w19">
+  <div class="wall">
+    <figure class="frame float">
+      <a class="pic" href="#" data-src="thumbs/w19.jpg" data-title="花海" aria-label="放大看《花海》">
+        <img src="thumbs/w19.jpg" alt="花海" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-019</span><span>花海</span><span>19 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>平塗花海</span><span class="mono">LI-2026-019</span></div>
+    <h3>花海</h3>
+    <p class="lead">雪酪色的花鋪滿深色底：粉、杏、鵝黃、薄荷、天藍，每朵花都厚實、平塗、帶一點高光。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>在最溫和的溫度裡，我什麼都不想變成，就只是開。這幅畫沒有故事，就是開花。</dd>
+      <dt>象徵</dt><dd>豐盛、單純、和不需要理由的好心情。</dd>
+      <dt>它給你的</dt><dd>花瓣輕搖、整朵慢轉。游標經過的花會朝你的方向微微偏頭。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>100 版</b><span class="lbl">本件編號</span><b class="mono">1 / 100</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 3,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 9,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 22,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w19" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-019%20花海%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="work flip" id="w20">
+  <div class="wall">
+    <figure class="frame float">
+      <a class="pic" href="#" data-src="thumbs/w20.jpg" data-title="紙上花" aria-label="放大看《紙上花》">
+        <img src="thumbs/w20.jpg" alt="紙上花" loading="lazy" width="720" height="900">
+      </a>
+    </figure>
+    <div class="plate"><span>LI-2026-020</span><span>紙上花</span><span>20 / 25</span></div>
+  </div>
+  <div class="text">
+    <div class="eyebrow"><span>平塗花海</span><span class="mono">LI-2026-020</span></div>
+    <h3>紙上花</h3>
+    <p class="lead">同一片花海，換到紙色的底：紅、藍、黃、黑、灰綠。像一張老海報，也像小孩剪的紙花。</p>
+    <dl class="notes">
+      <dt>緣由</dt><dd>我想知道《花海》如果不是在夜裡開、而是在一張紙上開，會不會比較安靜。答案是會，而且更耐看。</dd>
+      <dt>象徵</dt><dd>日常、紙的溫度、與手作的痕跡。</dd>
+      <dt>它給你的</dt><dd>和《花海》一樣會動，但慢一點。它適合放在一個你每天都會經過的地方。</dd>
+    </dl>
+    <div class="edition">
+      <div class="edrow"><span class="lbl">限量</span><b>100 版</b><span class="lbl">本件編號</span><b class="mono">1 / 100</b></div>
+      <table class="sizes"><thead><tr><th>尺寸</th><th></th><th>價格</th></tr></thead><tbody><tr><td>S</td><td>30 × 37.5 cm</td><td class="num">NT$ 3,800</td></tr><tr><td>M</td><td>50 × 62.5 cm</td><td class="num">NT$ 9,800</td></tr><tr><td>L</td><td>80 × 100 cm</td><td class="num">NT$ 22,000</td></tr></tbody></table>
+      <div class="acts">
+        <a class="btn gold" href="https://ascendalife.github.io/li-gallery/twenty.html?w=w20" target="_blank" rel="noopener">用手機看它動 · AR</a>
+        <a class="btn" href="mailto:ascenda2026@gmail.com?subject=LI-2026-020%20紙上花%20收藏詢問">收藏詢問</a>
+      </div>
+    </div>
+  </div>
+</article>
+</section>
+
+  <section class="outro" id="ar">
+    <div class="cols">
+      <div>
+        <h2>怎麼讓畫動起來</h2>
+        <ol>
+          <li>用手機（Safari 或 Chrome）打開 AR 頁 —— 掃右邊的 QR，或按任何一幅的「用手機看它動」</li>
+          <li>按「開啟相機」並允許權限</li>
+          <li>把鏡頭對準這頁上的任何一幅畫（電腦螢幕上或印出來的都可以），距離 30–60 公分</li>
+          <li>畫被認出來後就會開始動；移開就停</li>
+        </ol>
+        <p class="note">每幅附 AR 啟動權與編號證書；Giclée 藝術微噴、無酸紙、鋁合金浮框。<br>全部作品由演算法即時生成，無臨摹、無 AI 生圖；每一幅都能以任意尺寸重新輸出，不失真。</p>
+      </div>
+      <div>
+        <div id="qr" aria-label="AR 頁面 QR code"></div>
+        <p class="mono" style="margin-top:8px">掃描開啟 AR</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<figure id="lb" hidden><button id="lbx" type="button">關閉 ✕</button><img alt=""><figcaption></figcaption><div class="err" hidden>圖片載入失敗 —— 點任何地方關閉</div></figure>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function(){
+  var AR = "https://ascendalife.github.io/li-gallery/twenty.html";
+  var abs = /^https?:/.test(AR) ? AR : new URL(AR, location.href).href;
+  try{ new QRCode(document.getElementById('qr'), {text: abs, width:150, height:150}); }catch(e){}
+  var lb=document.getElementById('lb'), img=lb.querySelector('img'), cap=lb.querySelector('figcaption');
+  document.querySelectorAll('.pic').forEach(function(a){
+    a.addEventListener('click', function(e){ e.preventDefault(); lb.querySelector('.err').hidden=true; img.src=a.dataset.src; img.alt=a.dataset.title; cap.textContent=a.dataset.title; lb.hidden=false; document.body.style.overflow='hidden'; });
+  });
+  function close(){ lb.hidden=true; document.body.style.overflow=''; }
+  lb.addEventListener('click', close);
+  img.addEventListener('error', function(){ lb.querySelector('.err').hidden=false; });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+})();
+</script>

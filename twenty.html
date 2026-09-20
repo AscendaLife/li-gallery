@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>會動的畫 · 25 幅</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<style>
+  html,body{margin:0;height:100%;background:#0b0a0a;color:#eee;font:14px/1.5 -apple-system,"PingFang TC",sans-serif}
+  body{overflow:hidden}
+  #ui{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.8));pointer-events:none;z-index:5}
+  #ui b{color:#E3B23C;font-weight:500} #hint{font-size:13px}
+  #log{font:11px/1.4 monospace;opacity:.6;max-height:90px;overflow:auto;margin-top:6px;white-space:pre-wrap}
+  #start{position:fixed;inset:0;overflow:auto;z-index:10;background:#0b0a0a;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+  #start.off{display:none}
+  #start h1{font-size:20px;margin:0 0 4px} #start p{margin:0 0 12px;opacity:.75;font-size:13px}
+  #go{font:inherit;font-size:16px;padding:12px 26px;background:#E3B23C;color:#111;border:0;border-radius:2px;width:100%;max-width:360px;display:block;margin:0 auto 10px}
+  #qrbox{display:flex;flex-direction:column;align-items:center;gap:6px;margin:6px 0 14px} #qr{background:#fff;padding:6px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+  figure{margin:0;cursor:pointer} figure.sel img{outline:3px solid #E3B23C} figure img{width:100%;aspect-ratio:4/5;object-fit:cover;border:1px solid #2a2726;display:block;background:#161412}
+  figcaption{font-size:11px;opacity:.75;margin-top:3px}
+  #bar{position:fixed;left:0;right:0;bottom:0;z-index:12;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:#141210;border-top:1px solid #3a3531;display:flex;align-items:center;gap:12px}
+  #bar span{flex:1;font-size:13px} #bar b{color:#E3B23C}
+  #go2{font:inherit;font-size:15px;padding:10px 18px;background:#E3B23C;color:#111;border:0;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="start">
+  <h1>會動的畫</h1>
+  <p id="intro">25 幅原創作品。<b style="color:#E3B23C">先點下面你要掃的那幅畫</b>，再開相機。</p>
+  <button id="go" hidden>開啟相機</button>
+  <div id="qrbox"><small style="opacity:.7">在電腦上看到這頁？用手機掃這個 QR</small><div id="qr"></div></div>
+  <div class="grid">
+      <figure data-id="w01" data-i="0" tabindex="0"><img src="thumbs/w01.jpg" alt="層疊之心" loading="lazy"><figcaption>01 層疊之心</figcaption></figure>
+      <figure data-id="w02" data-i="1" tabindex="0"><img src="thumbs/w02.jpg" alt="折射球" loading="lazy"><figcaption>02 折射球</figcaption></figure>
+      <figure data-id="w03" data-i="2" tabindex="0"><img src="thumbs/w03.jpg" alt="切面月" loading="lazy"><figcaption>03 切面月</figcaption></figure>
+      <figure data-id="w04" data-i="3" tabindex="0"><img src="thumbs/w04.jpg" alt="兩顆星球" loading="lazy"><figcaption>04 兩顆星球</figcaption></figure>
+      <figure data-id="w05" data-i="4" tabindex="0"><img src="thumbs/w05.jpg" alt="酸性層疊" loading="lazy"><figcaption>05 酸性層疊</figcaption></figure>
+      <figure data-id="w06" data-i="5" tabindex="0"><img src="thumbs/w06.jpg" alt="山湖之城" loading="lazy"><figcaption>06 山湖之城</figcaption></figure>
+      <figure data-id="w07" data-i="6" tabindex="0"><img src="thumbs/w07.jpg" alt="不眠城" loading="lazy"><figcaption>07 不眠城</figcaption></figure>
+      <figure data-id="w08" data-i="7" tabindex="0"><img src="thumbs/w08.jpg" alt="千尺簾" loading="lazy"><figcaption>08 千尺簾</figcaption></figure>
+      <figure data-id="w09" data-i="8" tabindex="0"><img src="thumbs/w09.jpg" alt="第七個日落" loading="lazy"><figcaption>09 第七個日落</figcaption></figure>
+      <figure data-id="w10" data-i="9" tabindex="0"><img src="thumbs/w10.jpg" alt="曲流" loading="lazy"><figcaption>10 曲流</figcaption></figure>
+      <figure data-id="w11" data-i="10" tabindex="0"><img src="thumbs/w11.jpg" alt="紅域偏流" loading="lazy"><figcaption>11 紅域偏流</figcaption></figure>
+      <figure data-id="w12" data-i="11" tabindex="0"><img src="thumbs/w12.jpg" alt="深海磷光" loading="lazy"><figcaption>12 深海磷光</figcaption></figure>
+      <figure data-id="w13" data-i="12" tabindex="0"><img src="thumbs/w13.jpg" alt="液態地層" loading="lazy"><figcaption>13 液態地層</figcaption></figure>
+      <figure data-id="w14" data-i="13" tabindex="0"><img src="thumbs/w14.jpg" alt="霧中絲線" loading="lazy"><figcaption>14 霧中絲線</figcaption></figure>
+      <figure data-id="w15" data-i="14" tabindex="0"><img src="thumbs/w15.jpg" alt="遠山有雪" loading="lazy"><figcaption>15 遠山有雪</figcaption></figure>
+      <figure data-id="w16" data-i="15" tabindex="0"><img src="thumbs/w16.jpg" alt="千瓣" loading="lazy"><figcaption>16 千瓣</figcaption></figure>
+      <figure data-id="w17" data-i="16" tabindex="0"><img src="thumbs/w17.jpg" alt="黃金扇區" loading="lazy"><figcaption>17 黃金扇區</figcaption></figure>
+      <figure data-id="w18" data-i="17" tabindex="0"><img src="thumbs/w18.jpg" alt="干涉帶" loading="lazy"><figcaption>18 干涉帶</figcaption></figure>
+      <figure data-id="w19" data-i="18" tabindex="0"><img src="thumbs/w19.jpg" alt="花海" loading="lazy"><figcaption>19 花海</figcaption></figure>
+      <figure data-id="w20" data-i="19" tabindex="0"><img src="thumbs/w20.jpg" alt="紙上花" loading="lazy"><figcaption>20 紙上花</figcaption></figure>
+      <figure data-id="w21" data-i="20" tabindex="0"><img src="thumbs/w21.jpg" alt="極光雪國" loading="lazy"><figcaption>21 極光雪國</figcaption></figure>
+      <figure data-id="w22" data-i="21" tabindex="0"><img src="thumbs/w22.jpg" alt="沙漠星港" loading="lazy"><figcaption>22 沙漠星港</figcaption></figure>
+      <figure data-id="w23" data-i="22" tabindex="0"><img src="thumbs/w23.jpg" alt="熱帶瀑布谷" loading="lazy"><figcaption>23 熱帶瀑布谷</figcaption></figure>
+      <figure data-id="w24" data-i="23" tabindex="0"><img src="thumbs/w24.jpg" alt="海灣燈塔" loading="lazy"><figcaption>24 海灣燈塔</figcaption></figure>
+      <figure data-id="w25" data-i="24" tabindex="0"><img src="thumbs/w25.jpg" alt="天空之城" loading="lazy"><figcaption>25 天空之城</figcaption></figure>
+  </div>
+</div>
+<div id="bar" hidden><span>已選 <b id="barTitle"></b></span><button id="go2" type="button">開啟相機</button></div>
+<div id="ui"><div id="hint">尋找畫作中…</div><div id="log"></div></div>
+
+<div id="scenehost"></div>
+
+<script>
+  const WORKS=[["w01", "層疊之心"], ["w02", "折射球"], ["w03", "切面月"], ["w04", "兩顆星球"], ["w05", "酸性層疊"], ["w06", "山湖之城"], ["w07", "不眠城"], ["w08", "千尺簾"], ["w09", "第七個日落"], ["w10", "曲流"], ["w11", "紅域偏流"], ["w12", "深海磷光"], ["w13", "液態地層"], ["w14", "霧中絲線"], ["w15", "遠山有雪"], ["w16", "千瓣"], ["w17", "黃金扇區"], ["w18", "干涉帶"], ["w19", "花海"], ["w20", "紙上花"], ["w21", "極光雪國"], ["w22", "沙漠星港"], ["w23", "熱帶瀑布谷"], ["w24", "海灣燈塔"], ["w25", "天空之城"]];
+  const hint=document.getElementById('hint'), logEl=document.getElementById('log');
+  let sel=null, scene=null, vids=[];
+  const qs=new URLSearchParams(location.search).get('w');
+  function choose(id){ sel=id; document.querySelectorAll('.grid figure').forEach(f=>f.classList.toggle('sel',f.dataset.id===id)); const t=WORKS.find(w=>w[0]===id); document.getElementById('intro').innerHTML='已選：<b style="color:#E3B23C">'+t[1]+'</b>。按下面開啟相機，然後對準這幅畫。'; document.getElementById('go').hidden=false; document.getElementById('barTitle').textContent=t[1]; document.getElementById('bar').hidden=false; }
+  document.querySelectorAll('.grid figure').forEach(f=>{ f.addEventListener('click',()=>choose(f.dataset.id)); });
+  if(qs && WORKS.some(w=>w[0]===qs)){ choose(qs); setTimeout(()=>document.getElementById('go').scrollIntoView({block:'center'}),50); }
+  function buildScene(id){
+    const t=WORKS.find(w=>w[0]===id);
+    document.getElementById('scenehost').innerHTML=
+      '<a-scene mindar-image="imageTargetSrc: ./mind/'+id+'.mind; autoStart: false; uiLoading: yes; uiScanning: yes; uiError: yes; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 0.001" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">'+
+      '<a-assets><video id="v0" src="./works/'+id+'.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video></a-assets>'+
+      '<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>'+
+      '<a-entity class="tgt" data-vid="v0" data-title="'+t[1]+'" mindar-image-target="targetIndex: 0"><a-video src="#v0" width="1" height="1.25"></a-video></a-entity></a-scene>';
+    scene=document.querySelector('a-scene'); vids=[...document.querySelectorAll('a-assets video')];
+    scene.addEventListener('arReady',()=>L('AR 就緒 ✓ 指紋已載入'));
+    scene.addEventListener('arError',e=>{ L('AR 錯誤 '+JSON.stringify(e.detail||'')); diag('<b>AR 啟動錯誤</b>'); });
+    document.querySelectorAll('.tgt').forEach(tgt=>{ const v=document.getElementById(tgt.dataset.vid);
+      tgt.addEventListener('targetFound',()=>{ v.play(); L('找到 '+tgt.dataset.title); hint.innerHTML='<b>'+tgt.dataset.title+'</b> — 畫在動'; });
+      tgt.addEventListener('targetLost',()=>{ v.pause(); hint.textContent='畫離開畫面了，再對準一次'; }); });
+    return new Promise(res=>{ if(scene.hasLoaded) res(); else scene.addEventListener('loaded',res,{once:true}); });
+  }
+  const L=(m)=>{ logEl.textContent+=(new Date().toTimeString().slice(3,8))+' '+m+'\n'; logEl.scrollTop=1e6; };
+  const ua=navigator.userAgent, inApp=/Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(ua);
+  function diag(extra){ hint.innerHTML=extra+'<br><small style="opacity:.6">'+(location.protocol==='https:'?'https ✓':'<b>不是 https ✗</b>')+' · '+(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia?'相機 API ✓':'<b>沒有相機 API ✗</b>')+' · '+(inApp?'<b>App 內建瀏覽器 ✗</b>':'一般瀏覽器 ✓')+'</small>'; }
+  L('頁面載入 ✓  A-Frame '+(window.AFRAME?'✓':'✗')+'  MindAR '+((window.AFRAME&&AFRAME.systems['mindar-image-system'])?'✓':'✗'));
+  try{ new QRCode(document.getElementById('qr'),{text:location.href.split('?')[0],width:120,height:120}); }catch(e){}
+  if(/Claude/i.test(ua)) diag('<b>這是 Claude App 的內建瀏覽器，沒有相機。</b>請用手機掃 QR。');
+  if(inApp) diag('<b>請改用 Safari / Chrome 開啟</b>：LINE、FB、IG 內建瀏覽器不給相機權限。');
+  async function startAR(){
+    const btn=document.getElementById('go'); btn.disabled=true; btn.textContent='開啟中…'; document.getElementById('bar').hidden=true;
+    let stream=null;
+    try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); }
+    catch(e){ document.getElementById('start').classList.add('off'); L('相機失敗 '+e.name); diag('<b>相機打不開：'+e.name+'</b> '+(e.message||'')+(e.name==='NotAllowedError'?'<br>到 設定 → Safari／Chrome → 相機 改成允許後重新整理。':'')); return; }
+    stream.getTracks().forEach(t=>t.stop());
+    L('相機權限 ✓，建立場景 '+sel); await buildScene(sel); L('場景就緒');
+    for(const v of vids){ try{ const p=v.play(); await Promise.race([p,new Promise(r=>setTimeout(r,1500))]); v.pause(); }catch(e){} }   // iOS：在手勢裡解鎖影片，但最多等 1.5 秒
+    document.getElementById('start').classList.add('off');
+    hint.innerHTML='正在下載這幅畫的指紋並啟動相機（幾秒）…'; L('開始載入指紋');
+    try{ await scene.systems['mindar-image-system'].start(); L('start() 完成'); hint.innerHTML='尋找畫作中… 對準整幅畫，距離 30–60 公分'; }
+    catch(e){ L('start() 失敗 '+(e&&e.message||e)); diag('<b>AR 引擎啟動失敗：</b>'+(e&&e.message||e)); }
+  }
+  document.getElementById('go').addEventListener('click', startAR);
+  document.getElementById('go2').addEventListener('click', startAR);
+  window.addEventListener('error',e=>{ L('錯誤 '+e.message); diag('<b>頁面錯誤：</b>'+e.message); });
+</script>
+</body>
+</html>
