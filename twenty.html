@@ -84,7 +84,10 @@
       '<a-entity class="tgt" data-vid="v0" data-title="'+t[1]+'" mindar-image-target="targetIndex: 0"><a-video src="#v0" width="1" height="1.25"></a-video></a-entity></a-scene>';
     scene=document.querySelector('a-scene'); vids=[...document.querySelectorAll('a-assets video')];
     scene.addEventListener('arReady',()=>L('AR 就緒 ✓ 指紋已載入'));
-      scene.addEventListener('arError',e=>{ L('AR 錯誤 '+JSON.stringify(e.detail||'')); diag('<b>相機／AR 啟動錯誤</b>：請確認已允許相機權限，或改用 Chrome／Safari。'); });
+      scene.addEventListener('arError',e=>{ L('AR 錯誤 '+JSON.stringify(e.detail||''));
+      document.querySelectorAll('.mindar-ui-overlay').forEach(el=>el.style.display='none');
+      const s=document.getElementById('start'); s.classList.remove('off'); s.innerHTML='<h1>這台裝置開不了相機</h1><p>錯誤：'+((e.detail&&e.detail.error)||'')+'。電腦的 Claude 內建瀏覽器沒有相機；手機請用 Chrome／Safari 並允許相機權限。</p><div id="qrbox"><small style="opacity:.7">用手機掃這個 QR 開啟</small><div id="qr2"></div></div><p><a href="'+location.pathname+'" style="color:#E3B23C">重新開始</a></p>';
+      try{ new QRCode(document.getElementById('qr2'),{text:location.href.split('?')[0],width:160,height:160}); }catch(x){} });
     document.querySelectorAll('.tgt').forEach(tgt=>{ const v=document.getElementById(tgt.dataset.vid);
       tgt.addEventListener('targetFound',()=>{ v.play(); L('找到 '+tgt.dataset.title); hint.innerHTML='<b>'+tgt.dataset.title+'</b> — 畫在動'; });
       tgt.addEventListener('targetLost',()=>{ v.pause(); hint.textContent='畫離開畫面了，再對準一次'; }); });
