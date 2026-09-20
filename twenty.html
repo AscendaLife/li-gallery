@@ -33,6 +33,7 @@
   <h1>會動的畫</h1>
   <p id="intro">25 幅原創作品。<b style="color:#E3B23C">先點下面你要掃的那幅畫</b>，再開相機。</p>
   <button id="go" hidden>開啟相機</button>
+  <button id="goall" type="button" style="font:inherit;font-size:14px;padding:10px 18px;background:transparent;color:#eee;border:1px solid #3a3531;border-radius:2px;width:100%;max-width:360px;display:block;margin:0 auto 12px">不選畫，掃描任何一幅（載入約 10 秒）</button>
   <div id="qrbox"><small style="opacity:.7">在電腦上看到這頁？用手機掃這個 QR</small><div id="qr"></div></div>
   <div class="grid">
       <figure data-id="w01" data-i="0" tabindex="0"><img src="thumbs/w01.jpg" alt="層疊之心" loading="lazy"><figcaption>01 層疊之心</figcaption></figure>
@@ -80,12 +81,23 @@
   document.querySelectorAll('.grid figure').forEach(f=>{ f.addEventListener('click',()=>choose(f.dataset.id)); });
   if(qs && WORKS.some(w=>w[0]===qs)){ choose(qs); setTimeout(()=>document.getElementById('go').scrollIntoView({block:'center'}),50); }
   function buildScene(id){
+    if(id==='all'){
+      document.getElementById('scenehost').innerHTML=
+        '<a-scene mindar-image="imageTargetSrc: ./targets_all.mind; autoStart: false; uiLoading: yes; uiScanning: yes; uiError: yes; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 0.001" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">'+
+        '<a-assets>'+WORKS.map((w,i)=>'<video id="v'+i+'" src="./works/'+w[0]+'.mp4" preload="none" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>').join('')+'</a-assets>'+
+        '<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>'+
+        WORKS.map((w,i)=>'<a-entity class="tgt" data-vid="v'+i+'" data-title="'+w[1]+'" mindar-image-target="targetIndex: '+i+'"><a-video src="#v'+i+'" width="1" height="1.25"></a-video></a-entity>').join('')+'</a-scene>';
+      return wireScene();
+    }
     const t=WORKS.find(w=>w[0]===id);
     document.getElementById('scenehost').innerHTML=
       '<a-scene mindar-image="imageTargetSrc: ./mind/'+id+'.mind; autoStart: false; uiLoading: yes; uiScanning: yes; uiError: yes; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 0.001" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">'+
       '<a-assets><video id="v0" src="./works/'+id+'.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video></a-assets>'+
       '<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>'+
       '<a-entity class="tgt" data-vid="v0" data-title="'+t[1]+'" mindar-image-target="targetIndex: 0"><a-video src="#v0" width="1" height="1.25"></a-video></a-entity></a-scene>';
+    return wireScene();
+  }
+  function wireScene(){
     scene=document.querySelector('a-scene'); vids=[...document.querySelectorAll('a-assets video')];
     scene.addEventListener('arReady',()=>L('AR 就緒 ✓ 指紋已載入'));
       scene.addEventListener('arError',e=>{ L('AR 錯誤 '+JSON.stringify(e.detail||''));
@@ -108,9 +120,9 @@
     const btn=document.getElementById('go'); btn.disabled=true; btn.textContent='開啟中…'; document.getElementById('bar').hidden=true;
     if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){ document.getElementById('start').classList.add('off'); diag('<b>此瀏覽器沒有相機 API</b>，請改用 Chrome／Safari。'); return; }
     L('建立場景 '+sel); await buildScene(sel); L('場景就緒');
-    for(const v of vids){ try{ const p=v.play(); await Promise.race([p,new Promise(r=>setTimeout(r,1500))]); v.pause(); }catch(e){} }   // iOS：在手勢裡解鎖影片，但最多等 1.5 秒
+    for(const v of vids){ try{ const p=v.play(); await Promise.race([p,new Promise(r=>setTimeout(r,vids.length>1?600:1500))]); v.pause(); }catch(e){} }   // iOS：在手勢裡解鎖影片，但最多等 1.5 秒
     document.getElementById('start').classList.add('off');
-    hint.innerHTML='正在下載這幅畫的指紋並啟動相機（幾秒）…'; L('開始載入指紋');
+    hint.innerHTML=(sel==='all'?'正在下載全部 25 幅的指紋（約 10 秒）…':'正在下載這幅畫的指紋並啟動相機（幾秒）…'); L('開始載入指紋');
     try{ await scene.systems['mindar-image-system'].start(); L('start() 完成'); hint.innerHTML='尋找畫作中… <b>整幅畫入鏡</b>、離螢幕 30–50 公分、拿穩 2–3 秒；螢幕亮度調高、避免反光。';
       const fixCam=()=>{ const cv=[...document.querySelectorAll('video')].find(v=>!v.id); if(!cv){ L('找不到鏡頭 video 元素'); return; }
         const r=cv.getBoundingClientRect();
@@ -124,6 +136,7 @@
   document.getElementById('play2').addEventListener('click', ()=>{ const pv=document.getElementById('pv'); pv.src='./works/'+sel+'.mp4'; document.getElementById('player').hidden=false; pv.play().catch(()=>{}); });
   document.getElementById('pclose').addEventListener('click', ()=>{ const pv=document.getElementById('pv'); pv.pause(); pv.removeAttribute('src'); pv.load(); document.getElementById('player').hidden=true; });
   document.getElementById('go2').addEventListener('click', startAR);
+  document.getElementById('goall').addEventListener('click', ()=>{ sel='all'; startAR(); });
   window.addEventListener('error',e=>{ L('錯誤 '+e.message); diag('<b>頁面錯誤：</b>'+e.message); });
 </script>
 </body>
