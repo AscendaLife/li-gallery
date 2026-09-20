@@ -21,6 +21,7 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
   figure{margin:0;cursor:pointer} figure.sel img{outline:3px solid #E3B23C} figure img{width:100%;aspect-ratio:4/5;object-fit:cover;border:1px solid #2a2726;display:block;background:#161412}
   figcaption{font-size:11px;opacity:.75;margin-top:3px}
+  #scenehost{position:fixed;inset:0;z-index:1}
   #bar{position:fixed;left:0;right:0;bottom:0;z-index:12;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:#141210;border-top:1px solid #3a3531;display:flex;align-items:center;gap:12px}
   #bar span{flex:1;font-size:13px} #bar b{color:#E3B23C}
   #go2{font:inherit;font-size:15px;padding:10px 18px;background:#E3B23C;color:#111;border:0;border-radius:2px}
@@ -105,7 +106,8 @@
     for(const v of vids){ try{ const p=v.play(); await Promise.race([p,new Promise(r=>setTimeout(r,1500))]); v.pause(); }catch(e){} }   // iOS：在手勢裡解鎖影片，但最多等 1.5 秒
     document.getElementById('start').classList.add('off');
     hint.innerHTML='正在下載這幅畫的指紋並啟動相機（幾秒）…'; L('開始載入指紋');
-    try{ await scene.systems['mindar-image-system'].start(); L('start() 完成'); hint.innerHTML='尋找畫作中… 對準整幅畫，距離 30–60 公分'; }
+    try{ await scene.systems['mindar-image-system'].start(); L('start() 完成'); hint.innerHTML='尋找畫作中… 對準整幅畫，距離 30–60 公分';
+      setTimeout(()=>{ const cv=[...document.querySelectorAll('video')].find(v=>!v.id); if(cv){ L('鏡頭畫面 '+cv.videoWidth+'x'+cv.videoHeight+' 顯示 '+Math.round(cv.getBoundingClientRect().width)+'x'+Math.round(cv.getBoundingClientRect().height)+' ready='+cv.readyState+(cv.paused?' 暫停':' 播放中')); if(cv.paused) cv.play().catch(e=>L('鏡頭 play 失敗 '+e.name)); } else L('找不到鏡頭 video 元素'); }, 2500); }
     catch(e){ L('start() 失敗 '+(e&&e.message||e)); diag('<b>AR 引擎啟動失敗：</b>'+(e&&e.message||e)); }
   }
   document.getElementById('go').addEventListener('click', startAR);
