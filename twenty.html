@@ -119,10 +119,15 @@
   async function startAR(){
     const btn=document.getElementById('go'); btn.disabled=true; btn.textContent='開啟中…'; document.getElementById('bar').hidden=true;
     if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){ document.getElementById('start').classList.add('off'); diag('<b>此瀏覽器沒有相機 API</b>，請改用 Chrome／Safari。'); return; }
+    // iOS 要求相機必須在使用者按下的當下就要，所以先在這裡要到權限，場景建好後再交給 MindAR
+    let pre=null;
+    try{ pre=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); L('相機權限 ✓'); }
+    catch(e){ document.getElementById('start').classList.add('off'); L('相機失敗 '+e.name); diag('<b>相機打不開：'+e.name+'</b> '+(e.message||'')+(e.name==='NotAllowedError'?'<br>到 設定 → Safari／Chrome → 相機 改成允許後重新整理。':'')); return; }
     L('建立場景 '+sel); await buildScene(sel); L('場景就緒');
     for(const v of vids){ try{ const p=v.play(); await Promise.race([p,new Promise(r=>setTimeout(r,vids.length>1?600:1500))]); v.pause(); }catch(e){} }   // iOS：在手勢裡解鎖影片，但最多等 1.5 秒
     document.getElementById('start').classList.add('off');
-    hint.innerHTML=(sel==='all'?'正在下載全部 25 幅的指紋（約 10 秒）…':'正在下載這幅畫的指紋並啟動相機（幾秒）…'); L('開始載入指紋');
+    hint.innerHTML=(sel==='all'?'正在下載全部 25 幅的指紋（約 10–20 秒）…':'正在下載這幅畫的指紋並啟動相機（幾秒）…'); L('開始載入指紋');
+    if(pre){ pre.getTracks().forEach(t=>t.stop()); }
     try{ await scene.systems['mindar-image-system'].start(); L('start() 完成'); hint.innerHTML='尋找畫作中… <b>整幅畫入鏡</b>、離螢幕 30–50 公分、拿穩 2–3 秒；螢幕亮度調高、避免反光。';
       const fixCam=()=>{ const cv=[...document.querySelectorAll('video')].find(v=>!v.id); if(!cv){ L('找不到鏡頭 video 元素'); return; }
         const r=cv.getBoundingClientRect();
