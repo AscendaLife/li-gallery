@@ -62,7 +62,11 @@
       <figure data-id="w25" data-i="24" tabindex="0"><img src="thumbs/w25.jpg" alt="天空之城" loading="lazy"><figcaption>25 天空之城</figcaption></figure>
   </div>
 </div>
-<div id="bar" hidden><span>已選 <b id="barTitle"></b></span><button id="go2" type="button">開啟相機</button></div>
+<div id="bar" hidden><span>已選 <b id="barTitle"></b></span><button id="play2" type="button" style="font:inherit;font-size:13px;padding:10px 12px;background:transparent;color:#eee;border:1px solid #3a3531;border-radius:2px">直接看動畫</button><button id="go2" type="button">開啟相機</button></div>
+<div id="player" hidden style="position:fixed;inset:0;background:#000;z-index:30;display:flex;align-items:center;justify-content:center">
+  <video id="pv" playsinline webkit-playsinline loop muted autoplay style="max-width:100%;max-height:100%"></video>
+  <button id="pclose" type="button" style="position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px;font:inherit;padding:8px 12px;background:rgba(0,0,0,.6);color:#fff;border:1px solid #555">關閉 ✕</button>
+</div>
 <div id="ui"><div id="hint">尋找畫作中…</div><div id="log"></div></div>
 
 <div id="scenehost"></div>
@@ -107,7 +111,7 @@
     for(const v of vids){ try{ const p=v.play(); await Promise.race([p,new Promise(r=>setTimeout(r,1500))]); v.pause(); }catch(e){} }   // iOS：在手勢裡解鎖影片，但最多等 1.5 秒
     document.getElementById('start').classList.add('off');
     hint.innerHTML='正在下載這幅畫的指紋並啟動相機（幾秒）…'; L('開始載入指紋');
-    try{ await scene.systems['mindar-image-system'].start(); L('start() 完成'); hint.innerHTML='尋找畫作中… 對準整幅畫，距離 30–60 公分';
+    try{ await scene.systems['mindar-image-system'].start(); L('start() 完成'); hint.innerHTML='尋找畫作中… <b>整幅畫入鏡</b>、離螢幕 30–50 公分、拿穩 2–3 秒；螢幕亮度調高、避免反光。';
       const fixCam=()=>{ const cv=[...document.querySelectorAll('video')].find(v=>!v.id); if(!cv){ L('找不到鏡頭 video 元素'); return; }
         const r=cv.getBoundingClientRect();
         L('鏡頭 '+cv.videoWidth+'x'+cv.videoHeight+' 顯示 '+Math.round(r.width)+'x'+Math.round(r.height)+' ready='+cv.readyState+(cv.paused?' 暫停':' 播放中'));
@@ -117,6 +121,8 @@
     catch(e){ L('start() 失敗 '+(e&&e.message||e)); diag('<b>AR 引擎啟動失敗：</b>'+(e&&e.message||e)); }
   }
   document.getElementById('go').addEventListener('click', startAR);
+  document.getElementById('play2').addEventListener('click', ()=>{ const pv=document.getElementById('pv'); pv.src='./works/'+sel+'.mp4'; document.getElementById('player').hidden=false; pv.play().catch(()=>{}); });
+  document.getElementById('pclose').addEventListener('click', ()=>{ const pv=document.getElementById('pv'); pv.pause(); pv.removeAttribute('src'); pv.load(); document.getElementById('player').hidden=true; });
   document.getElementById('go2').addEventListener('click', startAR);
   window.addEventListener('error',e=>{ L('錯誤 '+e.message); diag('<b>頁面錯誤：</b>'+e.message); });
 </script>
