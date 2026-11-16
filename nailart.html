@@ -93,10 +93,20 @@
   const L=(m)=>{ logEl.textContent+=(new Date().toTimeString().slice(3,8))+' '+m+'\n'; logEl.scrollTop=1e6; };
   const ua=navigator.userAgent, inApp=/Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(ua);
   function diag(extra){ hint.innerHTML=extra+'<br><small style="opacity:.6">'+(location.protocol==='https:'?'https ✓':'<b>不是 https ✗</b>')+' · '+(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia?'相機 API ✓':'<b>沒有相機 API ✗</b>')+' · '+(inApp?'<b>App 內建瀏覽器 ✗</b>':'一般瀏覽器 ✓')+'</small>'; }
-  L('頁面載入 ✓  A-Frame '+(window.AFRAME?'✓':'✗')+'  MindAR '+((window.AFRAME&&AFRAME.systems['mindar-image-system'])?'✓':'✗'));
+  L('v5 頁面載入 ✓  A-Frame '+(window.AFRAME?'✓':'✗')+'  MindAR '+((window.AFRAME&&AFRAME.systems['mindar-image-system'])?'✓':'✗'));
   try{ new QRCode(document.getElementById('qr'),{text:location.href.split('?')[0],width:120,height:120}); }catch(e){}
   if(/Claude/i.test(ua)) diag('<b>這是 Claude App 的內建瀏覽器，沒有相機。</b>請用手機掃 QR。');
   if(inApp) diag('<b>請改用 Safari / Chrome 開啟</b>：LINE、FB、IG 內建瀏覽器不給相機權限。');
+  // 先用自己的 video 確認鏡頭真的有畫面，再交給 AR 引擎；這個 video 也當作背景，AR 的鏡頭沒出來時至少看得到畫面
+  async function probe(st){ const old=document.getElementById('probe'); if(old) old.remove();
+    const v=document.createElement('video'); v.id='probe'; v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.setAttribute('muted',''); v.srcObject=st;
+    Object.assign(v.style,{position:'fixed',left:'0',top:'0',width:'100vw',height:'100vh',objectFit:'cover',zIndex:'0'}); document.body.appendChild(v);
+    try{ await v.play(); }catch(e){ L('測試播放 '+e.name); }
+    const ok=await new Promise(r=>{ const t0=Date.now(); (function chk(){ if(v.videoWidth>0) return r(true); if(Date.now()-t0>4000) return r(false); setTimeout(chk,100); })(); });
+    const tk=st.getVideoTracks()[0]; L('鏡頭測試 '+(ok?v.videoWidth+'x'+v.videoHeight+' ✓':'沒有畫面 ✗')+' 軌='+(tk?tk.readyState+(tk.muted?'/muted':''):'無')); return ok; }
+  async function ensureFrames(st){ if(await probe(st)) return st;
+    st.getTracks().forEach(t=>t.stop()); await new Promise(r=>setTimeout(r,900)); L('改用任何可用鏡頭重試');
+    try{ const s2=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); if(await probe(s2)) return s2; s2.getTracks().forEach(t=>t.stop()); return null; }catch(e){ L('重試失敗 '+e.name); return null; } }
   async function startAR(){
     const btn=document.getElementById('go'); btn.disabled=true; btn.textContent='開啟中…'; document.getElementById('bar').hidden=true;
     if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){ document.getElementById('start').classList.add('off'); diag('<b>此瀏覽器沒有相機 API</b>，請改用 Chrome／Safari。'); return; }
@@ -104,7 +114,12 @@
     let pre=null;
     try{ pre=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); L('相機權限 ✓'); }
     catch(e){ document.getElementById('start').classList.add('off'); L('相機失敗 '+e.name); diag('<b>相機打不開：'+e.name+'</b> '+(e.message||'')+(e.name==='NotAllowedError'?'<br>到 設定 → Safari／Chrome → 相機 改成允許後重新整理。':'')); return; }
+    pre=await ensureFrames(pre);
+    if(!pre){ document.getElementById('start').classList.add('off'); diag('<b>鏡頭開了但沒有畫面。</b>請關掉其他正在用相機的分頁或 App，再重新整理這一頁。'); return; }
     L('建立場景 '+sel); await buildScene(sel); L('場景就緒');
+    let arOK=false; scene.addEventListener('arReady',()=>{ arOK=true; });
+    setTimeout(()=>{ if(arOK) return; const cv=[...document.querySelectorAll('video')].find(v=>!v.id); let gl='?'; try{ const c=document.createElement('canvas'); gl=(c.getContext('webgl2')?'webgl2':(c.getContext('webgl')?'webgl1':'無')); }catch(e){}
+      L('12 秒仍未就緒：AR鏡頭 '+(cv?cv.videoWidth+'x'+cv.videoHeight+' src='+(cv.srcObject?'有':'無'):'無元素')+' WebGL='+gl); diag('<b>AR 引擎還沒就緒。</b>請把這個畫面截圖給我。'); },12000);
     for(const v of vids){ try{ const p=v.play(); await Promise.race([p,new Promise(r=>setTimeout(r,vids.length>1?600:1500))]); v.pause(); }catch(e){} }   // iOS：在手勢裡解鎖影片，但最多等 1.5 秒
     document.getElementById('start').classList.add('off');
     hint.innerHTML=(sel==='all'?'正在下載全部 25 幅的指紋（約 10–20 秒）…':'正在下載這幅畫的指紋並啟動相機（幾秒）…'); L('開始載入指紋');
