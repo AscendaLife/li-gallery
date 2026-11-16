@@ -19,8 +19,8 @@
   #start h1{font-size:20px;margin:0 0 4px} #start p{margin:0 0 12px;opacity:.75;font-size:13px}
   #go{font:inherit;font-size:16px;padding:12px 26px;background:#E3B23C;color:#111;border:0;border-radius:2px;width:100%;max-width:360px;display:block;margin:0 auto 10px}
   #qrbox{display:flex;flex-direction:column;align-items:center;gap:6px;margin:6px 0 14px} #qr{background:#fff;padding:6px}
-  .grid.one{display:block;max-width:min(560px,100%);margin:0 auto} .grid.one figure.sel img{outline:0}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+  .grid figure.sel{grid-column:1/-1;max-width:min(560px,100%);margin:0 auto;order:-1}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
   figure{margin:0;cursor:pointer} figure.sel img{outline:3px solid #E3B23C} figure img{width:100%;aspect-ratio:4/5;object-fit:cover;border:1px solid #2a2726;display:block;background:#161412}
   figcaption{font-size:11px;opacity:.75;margin-top:3px}
   #scenehost{position:fixed;inset:0;z-index:1}
@@ -32,11 +32,16 @@
 <body>
 <div id="start">
   <h1>會動的美甲</h1>
-  <p id="intro">五片甲片，每片是一幅小畫。用手機開相機對準下面這張圖，鳥會飛、貓會走、魚會游、兔子會跳。</p>
+  <p id="intro">六個系列的美甲圖。<b style="color:#E3B23C">先點你要掃的那一組</b>（會放大），再用手機開相機對準它，圖裡的東西就會動。</p>
   <button id="go" hidden>開啟相機</button>
   <div id="qrbox"><small style="opacity:.7">在電腦上看到這頁？用手機掃這個 QR</small><div id="qr"></div></div>
-  <div class="grid one">
-      <figure data-id="n01" data-i="0" tabindex="0"><img src="thumbs/n01.jpg" alt="會動的美甲 · 五景"><figcaption>掃這張圖</figcaption></figure>
+  <div class="grid">
+      <figure data-id="f01" data-i="0" tabindex="0"><img src="thumbs/f01.jpg" alt="財庫天燈" loading="lazy"><figcaption>財庫天燈</figcaption></figure>
+      <figure data-id="h01" data-i="1" tabindex="0"><img src="thumbs/h01.jpg" alt="萬聖夜" loading="lazy"><figcaption>萬聖夜</figcaption></figure>
+      <figure data-id="c01" data-i="2" tabindex="0"><img src="thumbs/c01.jpg" alt="聖誕" loading="lazy"><figcaption>聖誕</figcaption></figure>
+      <figure data-id="y01" data-i="3" tabindex="0"><img src="thumbs/y01.jpg" alt="新年" loading="lazy"><figcaption>新年</figcaption></figure>
+      <figure data-id="z01" data-i="4" tabindex="0"><img src="thumbs/z01.jpg" alt="十二星座" loading="lazy"><figcaption>十二星座</figcaption></figure>
+      <figure data-id="n01" data-i="5" tabindex="0"><img src="thumbs/n01.jpg" alt="五景" loading="lazy"><figcaption>五景</figcaption></figure>
   </div>
 </div>
 <div id="bar" hidden><span>已選 <b id="barTitle"></b></span><button id="play2" type="button" style="font:inherit;font-size:13px;padding:10px 12px;background:transparent;color:#eee;border:1px solid #3a3531;border-radius:2px">直接看動畫</button><button id="go2" type="button">開啟相機</button></div>
@@ -49,7 +54,7 @@
 <div id="scenehost"></div>
 
 <script>
-  const WORKS=[["n01","會動的美甲 · 五景"]];
+  const WORKS=[["f01","財庫天燈"],["h01","萬聖夜"],["c01","聖誕"],["y01","新年"],["z01","十二星座"],["n01","五景"]];
   const hint=document.getElementById('hint'), logEl=document.getElementById('log');
   let sel=null, scene=null, vids=[];
   const qs=new URLSearchParams(location.search).get('w');
@@ -122,7 +127,6 @@
   document.getElementById('play2').addEventListener('click', ()=>{ const pv=document.getElementById('pv'); pv.src='./works/'+sel+'.mp4'; document.getElementById('player').hidden=false; pv.play().catch(()=>{}); });
   document.getElementById('pclose').addEventListener('click', ()=>{ const pv=document.getElementById('pv'); pv.pause(); pv.removeAttribute('src'); pv.load(); document.getElementById('player').hidden=true; });
   document.getElementById('go2').addEventListener('click', startAR);
-  choose('n01'); document.getElementById('intro').innerHTML='五片甲片，每片是一幅小畫。按<b style="color:#E3B23C">開啟相機</b>，對準下面這張圖，鳥會飛、貓會走、魚會游、兔子會跳。';
   window.addEventListener('error',e=>{ L('錯誤 '+e.message); diag('<b>頁面錯誤：</b>'+e.message); });
 </script>
 </body>
