@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>會動的美甲 · 五景</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<style>
+  html,body{margin:0;height:100%;background:#0b0a0a;color:#eee;font:14px/1.5 -apple-system,"PingFang TC",sans-serif}
+  body{overflow:hidden}
+  [hidden]{display:none!important}
+  #ui{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.8));pointer-events:none;z-index:5}
+  #ui b{color:#E3B23C;font-weight:500} #hint{font-size:13px}
+  #log{font:11px/1.4 monospace;opacity:.75;max-height:130px;overflow:auto;margin-top:6px;white-space:pre-wrap}
+  #start{position:fixed;inset:0;overflow:auto;z-index:10;background:#0b0a0a;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+  #start.off{display:none}
+  #start h1{font-size:20px;margin:0 0 4px} #start p{margin:0 0 12px;opacity:.75;font-size:13px}
+  #go{font:inherit;font-size:16px;padding:12px 26px;background:#E3B23C;color:#111;border:0;border-radius:2px;width:100%;max-width:360px;display:block;margin:0 auto 10px}
+  #qrbox{display:flex;flex-direction:column;align-items:center;gap:6px;margin:6px 0 14px} #qr{background:#fff;padding:6px}
+  .grid.one{display:block;max-width:min(560px,100%);margin:0 auto} .grid.one figure.sel img{outline:0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+  figure{margin:0;cursor:pointer} figure.sel img{outline:3px solid #E3B23C} figure img{width:100%;aspect-ratio:4/5;object-fit:cover;border:1px solid #2a2726;display:block;background:#161412}
+  figcaption{font-size:11px;opacity:.75;margin-top:3px}
+  #scenehost{position:fixed;inset:0;z-index:1}
+  #bar{position:fixed;left:0;right:0;bottom:0;z-index:12;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:#141210;border-top:1px solid #3a3531;display:flex;align-items:center;gap:12px}
+  #bar span{flex:1;font-size:13px} #bar b{color:#E3B23C}
+  #go2{font:inherit;font-size:15px;padding:10px 18px;background:#E3B23C;color:#111;border:0;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="start">
+  <h1>會動的美甲</h1>
+  <p id="intro">五片甲片，每片是一幅小畫。用手機開相機對準下面這張圖，鳥會飛、貓會走、魚會游、兔子會跳。</p>
+  <button id="go" hidden>開啟相機</button>
+  <div id="qrbox"><small style="opacity:.7">在電腦上看到這頁？用手機掃這個 QR</small><div id="qr"></div></div>
+  <div class="grid one">
+      <figure data-id="n01" data-i="0" tabindex="0"><img src="thumbs/n01.jpg" alt="會動的美甲 · 五景"><figcaption>掃這張圖</figcaption></figure>
+  </div>
+</div>
+<div id="bar" hidden><span>已選 <b id="barTitle"></b></span><button id="play2" type="button" style="font:inherit;font-size:13px;padding:10px 12px;background:transparent;color:#eee;border:1px solid #3a3531;border-radius:2px">直接看動畫</button><button id="go2" type="button">開啟相機</button></div>
+<div id="player" hidden style="position:fixed;inset:0;background:#000;z-index:30;display:flex;align-items:center;justify-content:center">
+  <video id="pv" playsinline webkit-playsinline loop muted autoplay style="max-width:100%;max-height:100%"></video>
+  <button id="pclose" type="button" style="position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px;font:inherit;padding:8px 12px;background:rgba(0,0,0,.6);color:#fff;border:1px solid #555">關閉 ✕</button>
+</div>
+<div id="ui"><div id="hint">尋找畫作中…</div><div id="log"></div></div>
+
+<div id="scenehost"></div>
+
+<script>
+  const WORKS=[["n01","會動的美甲 · 五景"]];
+  const hint=document.getElementById('hint'), logEl=document.getElementById('log');
+  let sel=null, scene=null, vids=[];
+  const qs=new URLSearchParams(location.search).get('w');
+  function choose(id){ sel=id; document.querySelectorAll('.grid figure').forEach(f=>f.classList.toggle('sel',f.dataset.id===id)); const t=WORKS.find(w=>w[0]===id); document.getElementById('intro').innerHTML='已選：<b style="color:#E3B23C">'+t[1]+'</b>。按下面開啟相機，然後對準這張圖。'; document.getElementById('go').hidden=false; document.getElementById('barTitle').textContent=t[1]; document.getElementById('bar').hidden=false; }
+  document.querySelectorAll('.grid figure').forEach(f=>{ f.addEventListener('click',()=>choose(f.dataset.id)); });
+  if(qs && WORKS.some(w=>w[0]===qs)){ choose(qs); setTimeout(()=>document.getElementById('go').scrollIntoView({block:'center'}),50); }
+  function buildScene(id){
+    if(id==='all'){
+      document.getElementById('scenehost').innerHTML=
+        '<a-scene mindar-image="imageTargetSrc: ./targets_all.mind; autoStart: false; uiLoading: yes; uiScanning: yes; uiError: yes; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 0.001" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">'+
+        '<a-assets>'+WORKS.map((w,i)=>'<video id="v'+i+'" src="./works/'+w[0]+'.mp4" preload="none" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>').join('')+'</a-assets>'+
+        '<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>'+
+        WORKS.map((w,i)=>'<a-entity class="tgt" data-vid="v'+i+'" data-title="'+w[1]+'" mindar-image-target="targetIndex: '+i+'"><a-video src="#v'+i+'" width="1" height="1.25"></a-video></a-entity>').join('')+'</a-scene>';
+      return wireScene();
+    }
+    const t=WORKS.find(w=>w[0]===id);
+    document.getElementById('scenehost').innerHTML=
+      '<a-scene mindar-image="imageTargetSrc: ./mind/'+id+'.mind; autoStart: false; uiLoading: yes; uiScanning: yes; uiError: yes; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 0.001" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">'+
+      '<a-assets><video id="v0" src="./works/'+id+'.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video></a-assets>'+
+      '<a-camera position="0 0 0" look-controls="enabled: false"></a-camera>'+
+      '<a-entity class="tgt" data-vid="v0" data-title="'+t[1]+'" mindar-image-target="targetIndex: 0"><a-video src="#v0" width="1" height="1.25"></a-video></a-entity></a-scene>';
+    return wireScene();
+  }
+  function wireScene(){
+    scene=document.querySelector('a-scene'); vids=[...document.querySelectorAll('a-assets video')];
+    scene.addEventListener('arReady',()=>L('AR 就緒 ✓ 指紋已載入'));
+      scene.addEventListener('arError',e=>{ L('AR 錯誤 '+JSON.stringify(e.detail||''));
+      document.querySelectorAll('.mindar-ui-overlay').forEach(el=>el.style.display='none');
+      const s=document.getElementById('start'); s.classList.remove('off'); s.innerHTML='<h1>這台裝置開不了相機</h1><p>錯誤：'+((e.detail&&e.detail.error)||'')+'。電腦的 Claude 內建瀏覽器沒有相機；手機請用 Chrome／Safari 並允許相機權限。</p><div id="qrbox"><small style="opacity:.7">用手機掃這個 QR 開啟</small><div id="qr2"></div></div><p><a href="'+location.pathname+'" style="color:#E3B23C">重新開始</a></p>';
+      try{ new QRCode(document.getElementById('qr2'),{text:location.href.split('?')[0],width:160,height:160}); }catch(x){} });
+    document.querySelectorAll('.tgt').forEach(tgt=>{ const v=document.getElementById(tgt.dataset.vid);
+      tgt.addEventListener('targetFound',()=>{ v.play(); L('找到 '+tgt.dataset.title); hint.innerHTML='<b>'+tgt.dataset.title+'</b> — 畫在動'; });
+      tgt.addEventListener('targetLost',()=>{ v.pause(); hint.textContent='畫離開畫面了，再對準一次'; }); });
+    return new Promise(res=>{ if(scene.hasLoaded) res(); else scene.addEventListener('loaded',res,{once:true}); });
+  }
+  const L=(m)=>{ logEl.textContent+=(new Date().toTimeString().slice(3,8))+' '+m+'\n'; logEl.scrollTop=1e6; };
+  const ua=navigator.userAgent, inApp=/Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(ua);
+  function diag(extra){ hint.innerHTML=extra+'<br><small style="opacity:.6">'+(location.protocol==='https:'?'https ✓':'<b>不是 https ✗</b>')+' · '+(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia?'相機 API ✓':'<b>沒有相機 API ✗</b>')+' · '+(inApp?'<b>App 內建瀏覽器 ✗</b>':'一般瀏覽器 ✓')+'</small>'; }
+  L('頁面載入 ✓  A-Frame '+(window.AFRAME?'✓':'✗')+'  MindAR '+((window.AFRAME&&AFRAME.systems['mindar-image-system'])?'✓':'✗'));
+  try{ new QRCode(document.getElementById('qr'),{text:location.href.split('?')[0],width:120,height:120}); }catch(e){}
+  if(/Claude/i.test(ua)) diag('<b>這是 Claude App 的內建瀏覽器，沒有相機。</b>請用手機掃 QR。');
+  if(inApp) diag('<b>請改用 Safari / Chrome 開啟</b>：LINE、FB、IG 內建瀏覽器不給相機權限。');
+  async function startAR(){
+    const btn=document.getElementById('go'); btn.disabled=true; btn.textContent='開啟中…'; document.getElementById('bar').hidden=true;
+    if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){ document.getElementById('start').classList.add('off'); diag('<b>此瀏覽器沒有相機 API</b>，請改用 Chrome／Safari。'); return; }
+    // iOS 要求相機必須在使用者按下的當下就要，所以先在這裡要到權限，場景建好後再交給 MindAR
+    let pre=null;
+    try{ pre=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); L('相機權限 ✓'); }
+    catch(e){ document.getElementById('start').classList.add('off'); L('相機失敗 '+e.name); diag('<b>相機打不開：'+e.name+'</b> '+(e.message||'')+(e.name==='NotAllowedError'?'<br>到 設定 → Safari／Chrome → 相機 改成允許後重新整理。':'')); return; }
+    L('建立場景 '+sel); await buildScene(sel); L('場景就緒');
+    for(const v of vids){ try{ const p=v.play(); await Promise.race([p,new Promise(r=>setTimeout(r,vids.length>1?600:1500))]); v.pause(); }catch(e){} }   // iOS：在手勢裡解鎖影片，但最多等 1.5 秒
+    document.getElementById('start').classList.add('off');
+    hint.innerHTML=(sel==='all'?'正在下載全部 25 幅的指紋（約 10–20 秒）…':'正在下載這幅畫的指紋並啟動相機（幾秒）…'); L('開始載入指紋');
+    if(pre){ pre.getTracks().forEach(t=>t.stop()); }
+    try{ await scene.systems['mindar-image-system'].start(); L('start() 完成'); hint.innerHTML='尋找畫作中… <b>整幅畫入鏡</b>、離螢幕 30–50 公分、拿穩 2–3 秒；螢幕亮度調高、避免反光。';
+      const fixCam=()=>{ const cv=[...document.querySelectorAll('video')].find(v=>!v.id); if(!cv){ L('找不到鏡頭 video 元素'); return; }
+        const r=cv.getBoundingClientRect();
+        L('鏡頭 '+cv.videoWidth+'x'+cv.videoHeight+' 顯示 '+Math.round(r.width)+'x'+Math.round(r.height)+' ready='+cv.readyState+(cv.paused?' 暫停':' 播放中'));
+        if(r.width<50||r.height<50){ Object.assign(cv.style,{position:'fixed',left:'0',top:'0',width:'100vw',height:'100vh',objectFit:'cover',zIndex:'0'}); L('已強制鏡頭鋪滿全螢幕'); }
+        if(cv.paused) cv.play().then(()=>L('鏡頭已播放')).catch(e=>L('鏡頭 play 失敗 '+e.name)); };
+      setTimeout(fixCam,2000); setTimeout(fixCam,5000); }
+    catch(e){ L('start() 失敗 '+(e&&e.message||e)); diag('<b>AR 引擎啟動失敗：</b>'+(e&&e.message||e)); }
+  }
+  document.getElementById('go').addEventListener('click', startAR);
+  document.getElementById('play2').addEventListener('click', ()=>{ const pv=document.getElementById('pv'); pv.src='./works/'+sel+'.mp4'; document.getElementById('player').hidden=false; pv.play().catch(()=>{}); });
+  document.getElementById('pclose').addEventListener('click', ()=>{ const pv=document.getElementById('pv'); pv.pause(); pv.removeAttribute('src'); pv.load(); document.getElementById('player').hidden=true; });
+  document.getElementById('go2').addEventListener('click', startAR);
+  choose('n01'); document.getElementById('intro').innerHTML='五片甲片，每片是一幅小畫。按<b style="color:#E3B23C">開啟相機</b>，對準下面這張圖，鳥會飛、貓會走、魚會游、兔子會跳。';
+  window.addEventListener('error',e=>{ L('錯誤 '+e.message); diag('<b>頁面錯誤：</b>'+e.message); });
+</script>
+</body>
+</html>
