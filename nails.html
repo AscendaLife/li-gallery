@@ -25,7 +25,14 @@
   #hint{flex:1;font-size:13px}
   #hint b{color:#E3B23C;font-weight:500}
   #flip{font:inherit;font-size:13px;padding:8px 12px;background:rgba(0,0,0,.45);color:#eee;border:1px solid #6b635c;border-radius:2px}
-  #bar{position:fixed;left:0;right:0;bottom:0;z-index:5;padding:26px 10px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.82));display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #bar{position:fixed;left:0;right:0;bottom:0;z-index:5;padding:26px 10px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.85));display:flex;flex-direction:column;gap:10px}
+  #opts,#sws{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:center}
+  #opts .lbl{flex:0 0 auto;font-size:11px;opacity:.7;margin:0 2px 0 6px}
+  .chip{flex:0 0 auto;font:inherit;font-size:13px;padding:6px 12px;background:rgba(0,0,0,.45);color:#eee;border:1px solid #6b635c;border-radius:999px}
+  .chip[aria-pressed="true"]{background:#E3B23C;border-color:#E3B23C;color:#111}
+  #tune{position:fixed;top:calc(58px + env(safe-area-inset-top,0px));left:10px;right:10px;z-index:6;background:rgba(15,13,12,.92);border:1px solid #3a3531;border-radius:6px;padding:12px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:10px 12px;align-items:center;font-size:13px}
+  #tune input{width:100%} #tune output{font-variant-numeric:tabular-nums;min-width:3.2em;text-align:right;color:#E3B23C}
+  #tune p{grid-column:1/-1;margin:0;font-size:12px;opacity:.7}
   .sw{flex:0 0 auto;font:inherit;font-size:12px;color:#eee;background:transparent;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:4px;width:62px}
   .sw i{display:block;width:40px;height:52px;border-radius:50% 50% 46% 46% / 62% 62% 38% 38%;border:2px solid transparent;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
   .sw[aria-pressed="true"] i{border-color:#E3B23C;box-shadow:0 0 0 2px #E3B23C}
@@ -47,9 +54,16 @@
 </div>
 <div id="top" hidden>
   <div id="hint">把<b>手背</b>對著鏡頭、五指張開，距離 20–40 公分。</div>
+  <button id="tunebtn" type="button" class="chip">微調</button>
   <button id="flip" type="button">切換鏡頭</button>
 </div>
-<div id="bar" hidden></div>
+<div id="tune" hidden>
+  <label for="t-size">大小</label><input id="t-size" type="range" min="60" max="160" step="2"><output id="o-size"></output>
+  <label for="t-wide">寬度</label><input id="t-wide" type="range" min="60" max="160" step="2"><output id="o-wide"></output>
+  <label for="t-pos">前後</label><input id="t-pos" type="range" min="-30" max="30" step="1"><output id="o-pos"></output>
+  <p>調到圖案剛好蓋住指甲，再把這三個數字告訴我，我會設成預設值。</p>
+</div>
+<div id="bar" hidden><div id="opts"></div><div id="sws"></div></div>
 
 <script type="module">
 const MP = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
@@ -67,14 +81,21 @@ const DESIGNS = [
 ];
 // 指尖與遠端指節的關鍵點編號：拇指、食指、中指、無名指、小指
 const TIPS=[4,8,12,16,20], DIPS=[3,7,11,15,19];
-const WIDTH=[0.98,0.80,0.82,0.78,0.74];   // 甲片寬度相對於指節長度
+const PIPS=[2,6,10,14,18];
+const WIDTH=[0.50,0.42,0.44,0.42,0.38];   // 甲面寬度相對於末節指節長度
+const MIDK=[0.70,0.85,0.85,0.85,0.85];    // 用前一節指節補償手指朝鏡頭時的縮短
+const NATURAL=0.53, EDGE=0.06;            // 真甲長度、指尖點到甲緣的距離（都以末節指節長度為單位）
+const SHAPES=[['round','圓形'],['square','方形'],['almond','杏仁'],['stiletto','尖形'],['coffin','梯形']];
+const LENGTHS=[['短',0],['中',0.28],['長',0.6],['特長',1.0]];
 
 const $=id=>document.getElementById(id);
 const start=$('start'), msg=$('msg'), go=$('go'), stage=$('stage'), cam=$('cam'), fx=$('fx'), ctx=fx.getContext('2d');
 const inApp=/Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(navigator.userAgent);
 
 let design = DESIGNS.find(d=>d.id===new URLSearchParams(location.search).get('d')) || DESIGNS[0];
-let facing='environment', stream=null, landmarker=null, running=false, lastTime=-1, smooth=[], seen=0;
+let facing='environment', stream=null, landmarker=null, running=false, lastTime=-1, lastStamp=0, tracks=[], seen=0;
+let shape='almond', ext=0.28, tune={size:100,wide:100,pos:0};
+try{ const sv=JSON.parse(localStorage.getItem('nailTune')||'null'); if(sv) tune=Object.assign(tune,sv); }catch(e){}
 
 try{ new QRCode($('qr'),{text:location.href,width:150,height:150}); }catch(e){}
 if(inApp) msg.textContent='你在 App 內建瀏覽器裡，相機可能打不開。請點右上角「用瀏覽器開啟」，改用 Safari 或 Chrome。';
@@ -89,10 +110,23 @@ DESIGNS.forEach(d=>{
   const b=document.createElement('button'); b.type='button'; b.className='sw'; b.dataset.id=d.id;
   const i=document.createElement('i'); i.style.background=chip(d); if(d.type==='aur'&&d.dark) i.style.backgroundColor=d.base;
   const s=document.createElement('span'); s.textContent=d.name;
-  b.append(i,s); b.addEventListener('click',()=>pick(d)); $('bar').appendChild(b);
+  b.append(i,s); b.addEventListener('click',()=>pick(d)); $('sws').appendChild(b);
 });
 function pick(d){ design=d; document.querySelectorAll('.sw').forEach(b=>b.setAttribute('aria-pressed',b.dataset.id===d.id?'true':'false')); }
 pick(design);
+function chips(label,items,get,set){
+  const l=document.createElement('span'); l.className='lbl'; l.textContent=label; $('opts').appendChild(l);
+  const bs=items.map(([v,text])=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=text;
+    b.addEventListener('click',()=>{ set(v); sync(); }); $('opts').appendChild(b); return [b,v]; });
+  const sync=()=>bs.forEach(([b,v])=>b.setAttribute('aria-pressed',get()===v?'true':'false')); sync();
+}
+chips('甲形',SHAPES,()=>shape,v=>{shape=v;});
+chips('長度',LENGTHS.map(([t,v])=>[v,t]),()=>ext,v=>{ext=v;});
+[['size','%'],['wide','%'],['pos','']].forEach(([k,u])=>{
+  const inp=$('t-'+k), out=$('o-'+k); inp.value=tune[k]; out.textContent=tune[k]+u;
+  inp.addEventListener('input',()=>{ tune[k]=+inp.value; out.textContent=tune[k]+u; try{ localStorage.setItem('nailTune',JSON.stringify(tune)); }catch(e){} });
+});
+$('tunebtn').addEventListener('click',()=>{ const t=$('tune'); t.hidden=!t.hidden; $('tunebtn').setAttribute('aria-pressed',t.hidden?'false':'true'); });
 
 // ---------- 畫甲片 ----------
 const rgb=h=>{const n=parseInt(h.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255];};
@@ -105,11 +139,21 @@ function seeded(s){return ()=>{s=(s*1664525+1013904223)%4294967296;return s/4294
 const DOTS=[0,1,2,3,4].map(i=>{const r=seeded(7919*(i+1));return Array.from({length:90},()=>({u:r()-0.5,v:r()-0.5,s:0.6+r()*1.2,ph:r()*6.28}));});
 
 function nailPath(w,h){
+  const cu=Math.min(w*0.45,h*0.4), top=-h/2, y1=Math.min(h/2-cu, top+h*0.62), c=w*0.12;
   ctx.beginPath();
-  ctx.moveTo(-w/2,h*0.22);
-  ctx.bezierCurveTo(-w/2,h*0.58,w/2,h*0.58,w/2,h*0.22);
-  ctx.bezierCurveTo(w/2,-h*0.22,w*0.34,-h/2,0,-h/2);
-  ctx.bezierCurveTo(-w*0.34,-h/2,-w/2,-h*0.22,-w/2,h*0.22);
+  ctx.moveTo(-w/2,h/2-cu);
+  ctx.bezierCurveTo(-w/2,h/2+cu*0.3,w/2,h/2+cu*0.3,w/2,h/2-cu);          // 甲根的圓弧
+  if(shape==='round'){
+    const r=Math.min(w*0.5,h*0.5); ctx.lineTo(w/2,top+r); ctx.ellipse(0,top+r,w/2,r,0,0,Math.PI,true);
+  }else if(shape==='square'){
+    ctx.lineTo(w/2,top+c); ctx.quadraticCurveTo(w/2,top,w/2-c,top); ctx.lineTo(-w/2+c,top); ctx.quadraticCurveTo(-w/2,top,-w/2,top+c);
+  }else if(shape==='stiletto'){
+    ctx.lineTo(w/2,y1); ctx.bezierCurveTo(w/2,y1-(y1-top)*0.45,w*0.10,top+(y1-top)*0.12,0,top); ctx.bezierCurveTo(-w*0.10,top+(y1-top)*0.12,-w/2,y1-(y1-top)*0.45,-w/2,y1);
+  }else if(shape==='coffin'){
+    ctx.lineTo(w/2,y1); ctx.lineTo(w*0.29,top+c); ctx.quadraticCurveTo(w*0.27,top,w*0.20,top); ctx.lineTo(-w*0.20,top); ctx.quadraticCurveTo(-w*0.27,top,-w*0.29,top+c); ctx.lineTo(-w/2,y1);
+  }else{ // almond
+    ctx.lineTo(w/2,y1); ctx.bezierCurveTo(w/2,y1-(y1-top)*0.6,w*0.24,top,0,top); ctx.bezierCurveTo(-w*0.24,top,-w/2,y1-(y1-top)*0.6,-w/2,y1);
+  }
   ctx.closePath();
 }
 function cat(d,nw,nh,i,t,px){
@@ -184,7 +228,7 @@ async function openCam(){
   stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280},height:{ideal:720}},audio:false});
   cam.srcObject=stream; await cam.play();
   stage.classList.toggle('mirror',facing==='user');
-  smooth=[]; lastTime=-1;
+  tracks=[]; lastTime=-1;
 }
 async function loadModel(){
   const {HandLandmarker,FilesetResolver}=await import(MP+'/vision_bundle.mjs');
@@ -209,26 +253,51 @@ $('flip').addEventListener('click',async()=>{
   try{ await openCam(); }catch(e){ facing=facing==='environment'?'user':'environment'; try{ await openCam(); }catch(_){} $('hint').textContent='這支手機切換不了鏡頭。'; }
 });
 
+// One Euro 濾波：手不動時壓掉抖動，手快速移動時仍跟得上
+const MINC=1.2, BETA=25;
+const alpha=(dt,c)=>1/(1+(1/(2*Math.PI*c))/dt);
+function oe(f,x,dt){
+  if(f.x===undefined){ f.x=x; f.dx=0; return x; }
+  const raw=(x-f.x)/dt; f.dx+=alpha(dt,1)*(raw-f.dx);
+  f.x+=alpha(dt,MINC+BETA*Math.abs(f.dx))*(x-f.x); return f.x;
+}
+function update(hands,dt){
+  const used=new Set(), next=[];
+  for(const h of hands){
+    let best=null,bd=0.25;
+    for(const tr of tracks){ if(used.has(tr)) continue; const d=Math.hypot(tr.pts[0].x-h[0].x,tr.pts[0].y-h[0].y); if(d<bd){bd=d;best=tr;} }
+    if(!best) best={f:h.map(()=>[{}, {}]),pts:h.map(p=>({x:p.x,y:p.y})),len:[]};
+    used.add(best);
+    best.pts=h.map((p,j)=>({x:oe(best.f[j][0],p.x,dt),y:oe(best.f[j][1],p.y,dt)}));
+    next.push(best);
+  }
+  tracks=next;
+}
 function loop(now){
   if(!running) return;
   requestAnimationFrame(loop);
   if(cam.readyState<2||!cam.videoWidth) return;
-  let res=null;
-  if(cam.currentTime!==lastTime){ lastTime=cam.currentTime; try{ res=landmarker.detectForVideo(cam,now); }catch(e){ return; } }
-  if(res){
-    const hands=res.landmarks||[];
-    smooth=hands.map((h,k)=>{ const prev=smooth[k]; return h.map((p,j)=>prev&&prev[j]?{x:prev[j].x+(p.x-prev[j].x)*0.6,y:prev[j].y+(p.y-prev[j].y)*0.6}:{x:p.x,y:p.y}); });
-    if(hands.length){ if(++seen===8) $('hint').innerHTML='轉動手腕，光澤會跟著動。下面可以換款式。'; }
+  if(cam.currentTime!==lastTime){
+    lastTime=cam.currentTime;
+    let res=null; try{ res=landmarker.detectForVideo(cam,now); }catch(e){ return; }
+    const dt=Math.min(0.2,Math.max(0.005,(now-lastStamp)/1000)); lastStamp=now;
+    const hands=res.landmarks||[]; update(hands,dt);
+    if(hands.length){ if(++seen===8) $('hint').innerHTML='轉動手腕，光澤會跟著動。位置不準就按<b>微調</b>。'; }
   }
   const W=fx.width,H=fx.height,vw=cam.videoWidth,vh=cam.videoHeight, sc=Math.max(W/vw,H/vh), ox=(W-vw*sc)/2, oy=(H-vh*sc)/2, t=now/1000;
+  const P=p=>[p.x*vw*sc+ox,p.y*vh*sc+oy], ks=tune.size/100, kw=tune.wide/100, kp=tune.pos/100;
   ctx.clearRect(0,0,W,H);
-  for(const h of smooth){
+  for(const tr of tracks){
+    const h=tr.pts;
     for(let i=0;i<5;i++){
-      const T=h[TIPS[i]], D=h[DIPS[i]];
-      const tx=T.x*vw*sc+ox, ty=T.y*vh*sc+oy, dx0=D.x*vw*sc+ox, dy0=D.y*vh*sc+oy;
-      let ux=tx-dx0, uy=ty-dy0; const len=Math.hypot(ux,uy); if(len<6) continue; ux/=len; uy/=len;
-      const nh=len*0.92, nw=len*WIDTH[i];
-      drawNail(i, tx-ux*nh*0.46, ty-uy*nh*0.46, Math.atan2(ux,-uy), nw, nh, t);
+      const [tx,ty]=P(h[TIPS[i]]), [qx,qy]=P(h[DIPS[i]]), [rx,ry]=P(h[PIPS[i]]);
+      let ux=tx-qx, uy=ty-qy; const raw=Math.hypot(ux,uy); if(raw<5) continue; ux/=raw; uy/=raw;
+      // 指節長度再平滑一次，避免甲片忽大忽小
+      const len=tr.len[i]=tr.len[i]?tr.len[i]+(raw-tr.len[i])*0.25:raw;
+      const ref=Math.max(len,Math.hypot(qx-rx,qy-ry)*MIDK[i]);
+      const nh=(NATURAL+ext)*len*ks, nw=ref*WIDTH[i]*ks*kw;
+      const edge=(EDGE+ext+kp)*len;                       // 甲緣在指尖點前方多遠
+      drawNail(i, tx+ux*(edge-nh/2), ty+uy*(edge-nh/2), Math.atan2(ux,-uy), nw, nh, t);
     }
   }
 }
