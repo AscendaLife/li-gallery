@@ -103,12 +103,17 @@
     for(const v of vids){ try{ const p=v.play(); await Promise.race([p,new Promise(r=>setTimeout(r,vids.length>1?600:1500))]); v.pause(); }catch(e){} }   // iOS：在手勢裡解鎖影片，但最多等 1.5 秒
     document.getElementById('start').classList.add('off');
     hint.innerHTML=(sel==='all'?'正在下載全部 25 幅的指紋（約 10–20 秒）…':'正在下載這幅畫的指紋並啟動相機（幾秒）…'); L('開始載入指紋');
-    if(pre){ pre.getTracks().forEach(t=>t.stop()); }
+    // 不要先關掉再重開鏡頭（部分 Android 手機第二次會拿到沒有畫面的鏡頭）；直接把已開好的鏡頭交給 AR 引擎
+    const gum=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices); window._gum=gum;
+    if(pre){ const tk=pre.getVideoTracks()[0]; L('鏡頭軌 '+(tk?tk.readyState+(tk.muted?' muted':''):'無'));
+      let used=false; navigator.mediaDevices.getUserMedia=function(c){ if(!used&&pre.active){ used=true; L('沿用已開啟的鏡頭'); return Promise.resolve(pre); } return gum(c); }; }
     try{ await scene.systems['mindar-image-system'].start(); L('start() 完成'); hint.innerHTML='尋找畫作中… <b>整幅畫入鏡</b>、離螢幕 30–50 公分、拿穩 2–3 秒；螢幕亮度調高、避免反光。';
       const fixCam=()=>{ const cv=[...document.querySelectorAll('video')].find(v=>!v.id); if(!cv){ L('找不到鏡頭 video 元素'); return; }
         const r=cv.getBoundingClientRect();
         L('鏡頭 '+cv.videoWidth+'x'+cv.videoHeight+' 顯示 '+Math.round(r.width)+'x'+Math.round(r.height)+' ready='+cv.readyState+(cv.paused?' 暫停':' 播放中'));
         if(r.width<50||r.height<50){ Object.assign(cv.style,{position:'fixed',left:'0',top:'0',width:'100vw',height:'100vh',objectFit:'cover',zIndex:'0'}); L('已強制鏡頭鋪滿全螢幕'); }
+        if(!cv.videoWidth&&!cv._retry){ cv._retry=1; L('鏡頭沒有畫面，重新接一次');
+          window._gum({video:{facingMode:'environment'},audio:false}).then(st=>{ cv.srcObject=st; return cv.play(); }).then(()=>L('重新接上鏡頭 ✓')).catch(e=>{ L('重接失敗 '+e.name); diag('<b>鏡頭沒有畫面：'+e.name+'</b><br>請關掉其他正在用相機的分頁或 App（包含剛才的美甲試戴頁），再重新整理。'); }); }
         if(cv.paused) cv.play().then(()=>L('鏡頭已播放')).catch(e=>L('鏡頭 play 失敗 '+e.name)); };
       setTimeout(fixCam,2000); setTimeout(fixCam,5000); }
     catch(e){ L('start() 失敗 '+(e&&e.message||e)); diag('<b>AR 引擎啟動失敗：</b>'+(e&&e.message||e)); }
