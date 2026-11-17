@@ -36,7 +36,7 @@
   <button id="go" hidden>開啟相機</button>
   <div id="qrbox"><small style="opacity:.7">在電腦上看到這頁？用手機掃這個 QR</small><div id="qr"></div></div>
   <div class="grid">
-      <figure data-id="r04" data-i="0" tabindex="0"><img src="thumbs/r04.jpg" alt="財庫天燈 · 上手" loading="lazy"><figcaption>財庫天燈 · 上手</figcaption></figure>
+      <figure data-id="r05" data-i="0" tabindex="0"><img src="thumbs/r05.jpg" alt="財庫天燈 · 上手" loading="lazy"><figcaption>財庫天燈 · 上手</figcaption></figure>
       <figure data-id="r03" data-i="1" tabindex="0"><img src="thumbs/r03.jpg" alt="財庫天燈 · 雙手" loading="lazy"><figcaption>財庫天燈 · 雙手</figcaption></figure>
       <figure data-id="f01" data-i="0" tabindex="0"><img src="thumbs/f01.jpg" alt="財庫天燈" loading="lazy"><figcaption>財庫天燈</figcaption></figure>
       <figure data-id="h01" data-i="1" tabindex="0"><img src="thumbs/h01.jpg" alt="萬聖夜" loading="lazy"><figcaption>萬聖夜</figcaption></figure>
@@ -56,7 +56,7 @@
 <div id="scenehost"></div>
 
 <script>
-  const WORKS=[["r04","財庫天燈 · 上手"],["r03","財庫天燈 · 雙手"],["f01","財庫天燈"],["h01","萬聖夜"],["c01","聖誕"],["y01","新年"],["z01","十二星座"],["n01","五景"]];
+  const WORKS=[["r05","財庫天燈 · 上手"],["r03","財庫天燈 · 雙手"],["f01","財庫天燈"],["h01","萬聖夜"],["c01","聖誕"],["y01","新年"],["z01","十二星座"],["n01","五景"]];
   const hint=document.getElementById('hint'), logEl=document.getElementById('log');
   let sel=null, scene=null, vids=[];
   const qs=new URLSearchParams(location.search).get('w');
@@ -95,7 +95,7 @@
   const L=(m)=>{ logEl.textContent+=(new Date().toTimeString().slice(3,8))+' '+m+'\n'; logEl.scrollTop=1e6; };
   const ua=navigator.userAgent, inApp=/Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(ua);
   function diag(extra){ hint.innerHTML=extra+'<br><small style="opacity:.6">'+(location.protocol==='https:'?'https ✓':'<b>不是 https ✗</b>')+' · '+(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia?'相機 API ✓':'<b>沒有相機 API ✗</b>')+' · '+(inApp?'<b>App 內建瀏覽器 ✗</b>':'一般瀏覽器 ✓')+'</small>'; }
-  L('v9 頁面載入 ✓  A-Frame '+(window.AFRAME?'✓':'✗')+'  MindAR '+((window.AFRAME&&AFRAME.systems['mindar-image-system'])?'✓':'✗'));
+  L('v10 頁面載入 ✓  A-Frame '+(window.AFRAME?'✓':'✗')+'  MindAR '+((window.AFRAME&&AFRAME.systems['mindar-image-system'])?'✓':'✗'));
   try{ new QRCode(document.getElementById('qr'),{text:location.href.split('?')[0],width:120,height:120}); }catch(e){}
   if(/Claude/i.test(ua)) diag('<b>這是 Claude App 的內建瀏覽器，沒有相機。</b>請用手機掃 QR。');
   if(inApp) diag('<b>請改用 Safari / Chrome 開啟</b>：LINE、FB、IG 內建瀏覽器不給相機權限。');
